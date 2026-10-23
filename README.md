@@ -63,29 +63,3 @@ POS/
     ├── init_db.js                    # Database initializer & seeder
     └── test_flow.js                  # Automated end-to-end integration test
 ```
-
----
-
-## 🎨 Key Features & Compliance
-
-1. **Standardized Design Palette & Spacing**:
-   - Signature Chick N Pastil dark green (`#1e5631`) with warm accent red and light card backgrounds (`#f5f8f6`).
-   - Clean left-aligned layout avoiding awkward table gaps while maintaining responsive spacing.
-2. **Business Process Automation Soft-Archive**:
-   - Deletion of menu sections or products is replaced by **Archive** (`is_archived = 1`). Historical reports and audit trails remain 100% intact.
-3. **Availability Toggling**:
-   - When marked unavailable, products are **not removed from the ordering screen**; they remain visible with an "Unavailable" badge and disabled styling.
-4. **Sales-Only System Alerts**:
-   - Alerts on the Live Sales page strictly monitor sales velocity against standard stock capacity and register payment ratios (cash float vs GCash).
-5. **Responsive Customization Modal**:
-   - On **mobile**, slides up as a smooth bottom-sheet modal.
-   - On **desktop**, appears as a centered modal.
-   - Allows choosing Pastil flavor (Original/Spicy), rice options (Plain/Garlic), extra toppings, and quantities.
-6. **Working PayMongo GCash Bridge**:
-   - Real-time PayMongo Links integration generates verified payment links and tracks payment status.
-7. **Standard Thermal Receipt Generation**:
-   - Formatted for standard 80mm/58mm thermal receipt printing and digital download with official transaction numbers (`TXN-YYYYMMDD-XXXX`).
-8. **Multi-Format Export**:
-   - Transaction reports can be exported directly to either **.csv** or **.pdf**.
-   - Managers can select custom date ranges.
-   - Staff is restricted to exporting today's shift logs only.
