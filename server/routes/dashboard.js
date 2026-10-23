@@ -15,7 +15,7 @@ router.get('/stats', async (req, res) => {
     }
 
     if (filter === 'today') {
-      whereClause += ' AND DATE(o.order_datetime) = CURDATE()';
+      whereClause += " AND DATE(o.order_datetime) = DATE('now')";
     }
 
     const [orders] = await db.query(
@@ -55,7 +55,7 @@ router.get('/stats', async (req, res) => {
     // 1. Dynamic Surge / Velocity Check: Orders placed in the last 1 hour
     let surgeSql = `SELECT COUNT(*) AS recent_count, COALESCE(SUM(order_total), 0) AS recent_sales
                     FROM orders
-                    WHERE order_datetime >= NOW() - INTERVAL 1 HOUR
+                    WHERE order_datetime >= datetime('now', '-1 hour')
                       AND order_status != 'Cancelled'`;
     const surgeParams = [];
     if (branch && branch !== 'All Branches') {
@@ -85,7 +85,7 @@ router.get('/stats', async (req, res) => {
                    FROM order_items oi
                    JOIN orders o ON oi.order_id = o.order_id
                    JOIN menu_products p ON oi.product_id = p.product_id
-                   WHERE DATE(o.order_datetime) = CURDATE()
+                   WHERE DATE(o.order_datetime) = DATE('now')
                      AND o.order_status != 'Cancelled'`;
     const itemParams = [];
     if (branch && branch !== 'All Branches') {

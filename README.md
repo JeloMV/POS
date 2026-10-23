@@ -12,11 +12,11 @@ npm install
 ```
 
 ### 2. Database Setup
-Ensure MySQL is running on `127.0.0.1:3306` with credentials matching `.env`:
+Initialize the local SQLite database:
 ```bash
-node scripts/init_db.js
+npm run init-db
 ```
-*This creates the `db123` database, tables, and seed records.*
+*This creates `data/pos.sqlite`, the tables, and the seed records. No MySQL server or XAMPP is required.*
 
 ### 3. Start POS Server
 ```bash
@@ -30,13 +30,13 @@ The server will start listening at: **http://localhost:3000**
 
 ```text
 POS/
-├── .env                              # MySQL & PayMongo credentials
+├── .env                              # PayMongo credentials and optional SQLite path
 ├── .gitignore                        # Git exclusion rules
-├── package.json                      # Dependencies (express, mysql2, axios, cors, jspdf)
+├── package.json                      # Dependencies (express, better-sqlite3, axios, cors, jspdf)
 ├── schema.sql                        # Database schema with audit & archive fields
 ├── server/
 │   ├── server.js                     # Express app & static server
-│   ├── db.js                         # MySQL connection pool
+│   ├── db.js                         # SQLite database connection
 │   ├── paymongo.js                   # PayMongo API bridge (GCash & Links)
 │   └── routes/
 │       ├── menu.js                   # Menu catalog, availability toggle, soft-archive
@@ -60,6 +60,6 @@ POS/
 │   └── staff/
 │       └── transactions.html         # Staff shift logs (today only, CSV & PDF export)
 └── scripts/
-    ├── init_db.js                    # Database initializer & seeder
+    ├── init_db.js                    # SQLite database initializer & seeder
     └── test_flow.js                  # Automated end-to-end integration test
 ```

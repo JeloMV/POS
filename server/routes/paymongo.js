@@ -27,7 +27,7 @@ router.post('/create-link', async (req, res) => {
 
     // Save temporary reference to order
     await db.query(
-      `UPDATE orders SET notes = CONCAT(IFNULL(notes, ''), ' [PayMongo Link: ', ?, ']') WHERE order_id = ?`,
+      `UPDATE orders SET notes = COALESCE(notes, '') || ' [PayMongo Link: ' || ? || ']' WHERE order_id = ?`,
       [result.linkId, order_id]
     );
 

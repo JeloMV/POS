@@ -1,15 +1,40 @@
-require('dotenv').config();
-const mysql = require('mysql2/promise');
+const fs = require('fs');
+const path = require('path');
+const Database = require('better-sqlite3');
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || '127.0.0.1',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'admin123',
-  database: process.env.DB_NAME || 'db123',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  decimalNumbers: true
-});
+const dataDirectory = path.join(__dirname, '../data');
+fs.mkdirSync(dataDirectory, { recursive: true });
 
-module.exports = pool;
+const databasePath = process.env.SQLITE_DB_PATH || path.join(dataDirectory, 'pos.sqlite');
+const sqlite = new Database(databasePath);
+
+sqlite.pragma('foreign_keys = ON');
+
+function query(sql, params = []) {
+  const statement = sqlite.prepare(sql);
+
+  if (/^\s*(SELECT|PRAGMA|WITH)\b/i.test(sql)) {
+    return Promise.resolve([statement.all(...params), undefined]);
+  }
+
+  const result = statement.run(...params);
+  return Promise.resolve([{
+    insertId: Number(result.lastInsertRowid),
+    affectedRows: result.changes
+  }, undefined]);
+}
+
+module.exports = {
+  query,
+  getConnection: async () => ({
+    query,
+    beginTransaction: async () => sqlite.exec('BEGIN'),
+    commit: async () => sqlite.exec('COMMIT'),
+    rollback: async () => {
+      if (sqlite.inTransaction) {
+        sqlite.exec('ROLLBACK');
+      }
+    },
+    release: () => {}
+  })
+};

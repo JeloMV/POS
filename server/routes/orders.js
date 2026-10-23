@@ -229,7 +229,7 @@ router.post('/:id/pay', async (req, res) => {
       paymentId = existingPay[0].payment_id;
       await connection.query(
         `UPDATE payments
-         SET payment_method = ?, amount_due = ?, amount_paid = ?, change_amount = ?, gcash_reference_number = ?, payment_status = 'Verified', paymongo_payment_intent_id = ?, paid_at = NOW()
+         SET payment_method = ?, amount_due = ?, amount_paid = ?, change_amount = ?, gcash_reference_number = ?, payment_status = 'Verified', paymongo_payment_intent_id = ?, paid_at = CURRENT_TIMESTAMP
          WHERE payment_id = ?`,
         [
           payment_method || 'Cash',
@@ -244,7 +244,7 @@ router.post('/:id/pay', async (req, res) => {
     } else {
       const [payResult] = await connection.query(
         `INSERT INTO payments (order_id, payment_method, amount_due, amount_paid, change_amount, gcash_reference_number, payment_status, paymongo_payment_intent_id, paid_at)
-         VALUES (?, ?, ?, ?, ?, ?, 'Verified', ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, 'Verified', ?, CURRENT_TIMESTAMP)`,
         [
           orderId,
           payment_method || 'Cash',
@@ -264,12 +264,12 @@ router.post('/:id/pay', async (req, res) => {
     if (existingReceipt.length > 0) {
       receiptId = existingReceipt[0].receipt_id;
       txnNumber = existingReceipt[0].transaction_number;
-      await connection.query('UPDATE receipts SET payment_id = ?, issued_at = NOW() WHERE receipt_id = ?', [paymentId, receiptId]);
+      await connection.query('UPDATE receipts SET payment_id = ?, issued_at = CURRENT_TIMESTAMP WHERE receipt_id = ?', [paymentId, receiptId]);
     } else {
       txnNumber = generateTxnNumber();
       const [receiptResult] = await connection.query(
         `INSERT INTO receipts (order_id, payment_id, transaction_number, receipt_type, issued_at)
-         VALUES (?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
         [orderId, paymentId, txnNumber, receipt_type || 'Printed']
       );
       receiptId = receiptResult.insertId;
@@ -335,7 +335,7 @@ router.get('/', async (req, res) => {
     const params = [];
 
     if (todayOnly === 'true' || today === '1') {
-      sql += ' AND DATE(o.order_datetime) = CURDATE()';
+      sql += " AND DATE(o.order_datetime) = DATE('now')";
     } else {
       if (startDate) {
         sql += ' AND DATE(o.order_datetime) >= ?';
