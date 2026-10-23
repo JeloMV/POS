@@ -808,6 +808,10 @@
       }
     }
 
+    function showToast(msg, type = 'success') {
+      alert(msg);
+    }
+
     async function openPaymentModal() {
       if (cart.length === 0) return;
       const user = window.getCurrentUser ? window.getCurrentUser() : { branch: 'Balagtas' };
@@ -1052,7 +1056,30 @@
       activePayMongoLink = null;
     }
 
-    document.addEventListener('DOMContentLoaded', fetchMenu);
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchMenu();
+      const urlParams = new URLSearchParams(window.location.search);
+      const receiptId = urlParams.get('receiptOrder');
+      if (receiptId) {
+        fetch(`/api/orders/${receiptId}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.order) {
+              renderReceipt({
+                order_id: data.order.order_id,
+                txn_number: data.order.transaction_number || 'TXN-PENDING',
+                payment_method: data.order.payment_method || 'Unpaid',
+                amount_due: Number(data.order.order_total),
+                amount_paid: Number(data.order.amount_paid || 0),
+                change: Number(data.order.change_amount || 0),
+                gcash_ref: data.order.gcash_reference_number,
+                items: data.order.items || []
+              });
+            }
+          })
+          .catch(e => console.warn(e));
+      }
+    });
   </script>
 </body>
 </html>

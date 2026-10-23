@@ -301,7 +301,7 @@ router.post('/:id/pay', async (req, res) => {
 
 router.get('/', async (req, res) => {
   try {
-    const { startDate, endDate, branch, status, paymentMethod, search, todayOnly } = req.query;
+    const { startDate, endDate, branch, status, paymentMethod, search, todayOnly, today } = req.query;
 
     let sql = `
       SELECT
@@ -334,7 +334,7 @@ router.get('/', async (req, res) => {
 
     const params = [];
 
-    if (todayOnly === 'true') {
+    if (todayOnly === 'true' || today === '1') {
       sql += ' AND DATE(o.order_datetime) = CURDATE()';
     } else {
       if (startDate) {
