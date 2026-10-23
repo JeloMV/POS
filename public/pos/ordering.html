@@ -212,12 +212,6 @@
             </div>
           </div>
 
-          <!-- Extra Addons -->
-          <div class="mb-3" id="addons-group-wrapper">
-            <label class="form-label small fw-bold text-dark text-uppercase mb-2">Extra Add-ons</label>
-            <div class="d-flex flex-column gap-2" id="modal-extra-addons-list"></div>
-          </div>
-
           <!-- Quantity Stepper -->
           <div class="d-flex align-items-center justify-content-between pt-2 border-top" id="quantity-stepper-wrapper">
             <span class="fw-bold text-dark small">Quantity</span>
@@ -451,7 +445,6 @@
     let modalFlavor = 'Original';
     let modalRice = 'Plain';
     let modalRicePrice = 0;
-    let modalSelectedAddons = [];
     let modalQty = 1;
 
     let currentOrderId = null;
@@ -545,7 +538,6 @@
       modalFlavor = 'Original';
       modalRice = 'Plain';
       modalRicePrice = 0;
-      modalSelectedAddons = [];
       modalQty = 1;
 
       document.getElementById('modal-product-name').textContent = activeProduct.product_name;
@@ -555,29 +547,8 @@
       const isPastil = activeProduct.section_name.toLowerCase().includes('pastil');
       const flavorWrapper = document.getElementById('flavor-group-wrapper');
       const riceWrapper = document.getElementById('rice-group-wrapper');
-      const addonsWrapper = document.getElementById('addons-group-wrapper');
       if (flavorWrapper) flavorWrapper.style.display = isPastil ? 'block' : 'none';
       if (riceWrapper) riceWrapper.style.display = isPastil ? 'block' : 'none';
-      if (addonsWrapper) addonsWrapper.style.display = isPastil ? 'block' : 'none';
-
-      const extraListEl = document.getElementById('modal-extra-addons-list');
-      if (isPastil) {
-        const extraAddons = menuData.addons.filter(a => a.addon_category === 'extra' && a.is_available);
-        if (extraListEl) {
-          extraListEl.innerHTML = extraAddons.map(a => `
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="addon-${a.addon_id}" value="${a.addon_id}" data-name="${a.addon_name}" data-price="${a.addon_price}" onchange="toggleAddon(this)">
-              <label class="form-check-label d-flex justify-content-between small text-dark" for="addon-${a.addon_id}">
-                <span>${a.addon_name}</span>
-                <span class="text-muted">+Php ${Number(a.addon_price).toFixed(2)}</span>
-              </label>
-            </div>
-          `).join('');
-        }
-      } else {
-        if (extraListEl) extraListEl.innerHTML = '';
-        modalSelectedAddons = [];
-      }
 
       updateModalTotal();
 
@@ -600,19 +571,6 @@
       updateModalTotal();
     }
 
-    function toggleAddon(checkbox) {
-      const addonId = parseInt(checkbox.value);
-      const addonName = checkbox.getAttribute('data-name');
-      const addonPrice = parseFloat(checkbox.getAttribute('data-price'));
-
-      if (checkbox.checked) {
-        modalSelectedAddons.push({ addon_id: addonId, addon_name: addonName, addon_price: addonPrice, quantity: 1 });
-      } else {
-        modalSelectedAddons = modalSelectedAddons.filter(a => a.addon_id !== addonId);
-      }
-      updateModalTotal();
-    }
-
     function adjustModalQty(change) {
       modalQty = Math.max(1, modalQty + change);
       document.getElementById('modal-item-qty').textContent = modalQty;
@@ -625,8 +583,6 @@
       let base = Number(activeProduct.price);
       if (isPastil) {
         base += modalRicePrice;
-        const addonSum = modalSelectedAddons.reduce((sum, a) => sum + (a.addon_price * a.quantity), 0);
-        base += addonSum;
       }
       const total = base * modalQty;
       document.getElementById('modal-item-total-preview').textContent = `Php ${total.toFixed(2)}`;
@@ -638,7 +594,6 @@
 
       let configuredAddons = [];
       if (isPastil) {
-        configuredAddons = [...modalSelectedAddons];
         configuredAddons.unshift({ addon_id: null, addon_name: `Flavor: ${modalFlavor}`, addon_price: 0, quantity: 1 });
         if (modalRicePrice > 0) {
           configuredAddons.unshift({ addon_id: null, addon_name: `Garlic Rice`, addon_price: modalRicePrice, quantity: 1 });
