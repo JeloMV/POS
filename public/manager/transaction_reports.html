@@ -38,6 +38,78 @@
     .badge-pay-pending  { background-color: #fff8e6; color: #b7791f; }
     .badge-pay-failed   { background-color: #fde8e8; color: #c53030; }
     .badge-pay-refunded { background-color: #f0ebff; color: #6c35de; }
+
+    @media print {
+      @page {
+        size: 80mm auto;
+        margin: 0;
+      }
+
+      html,
+      body {
+        width: 80mm;
+        margin: 0;
+        padding: 0;
+        background: #ffffff;
+      }
+
+      body > * {
+        display: none !important;
+      }
+
+      #receiptModal {
+        display: block !important;
+        position: static !important;
+        width: 80mm !important;
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        visibility: visible !important;
+      }
+
+      #receiptModal .modal-dialog,
+      #receiptModal .modal-content,
+      #receiptModal .modal-body {
+        display: block !important;
+        position: static !important;
+        width: 80mm !important;
+        max-width: none !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        visibility: visible !important;
+      }
+
+      #printableReceipt {
+        display: block !important;
+        position: static !important;
+        width: 80mm !important;
+        max-width: 80mm !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 4mm !important;
+        box-sizing: border-box;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+        page-break-before: avoid;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+        break-before: avoid-page;
+        break-after: avoid-page;
+        break-inside: avoid;
+        visibility: visible !important;
+      }
+
+      #printableReceipt * {
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body data-page-title="Transaction History">
@@ -129,14 +201,13 @@
                 <th>Order Amount</th>
                 <th>Order Status</th>
                 <th>Payment Status</th>
-                <th>Method</th>
                 <th>Date and Time</th>
                 <th style="width: 140px;">Action</th>
               </tr>
             </thead>
             <tbody id="transactions-table-body">
               <tr>
-                <td colspan="8" class="text-center py-4 text-muted">
+                <td colspan="7" class="text-center py-4 text-muted">
                   <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
                   Loading transaction history...
                 </td>
@@ -276,16 +347,25 @@
 
         </div>
         <div class="modal-footer border-0 pt-2 d-flex justify-content-between">
-          <div>
-            <button type="button" class="btn btn-outline-success rounded-pill px-3" id="btn-modal-collect-pay" onclick="openPaymentFromManagerModal()">
-              <i class="bi bi-cash-stack me-1"></i> Collect Payment
+          <div class="d-flex gap-2 align-items-center">
+            <div class="dropdown">
+              <button class="btn btn-outline-primary rounded-pill px-3 dropdown-toggle fw-semibold" type="button" id="managerStatusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-tag me-1"></i> <span id="mgr-status-btn-text">Status: Pending</span>
+              </button>
+              <ul class="dropdown-menu shadow-sm" id="mgr-status-dropdown-menu">
+                <li><a class="dropdown-item py-2 fw-semibold" href="javascript:void(0)" onclick="managerQuickSetStatus('Pending')"><i class="bi bi-hourglass-split me-2 text-warning"></i>Mark as Pending</a></li>
+                <li><a class="dropdown-item py-2 fw-semibold" href="javascript:void(0)" onclick="managerQuickSetStatus('Preparing')"><i class="bi bi-egg-fried me-2 text-primary"></i>Mark as Preparing</a></li>
+                <li><a class="dropdown-item py-2 fw-semibold" href="javascript:void(0)" onclick="managerQuickSetStatus('Completed')"><i class="bi bi-check-circle me-2 text-success"></i>Mark as Completed</a></li>
+                <li><hr class="dropdown-divider my-1"></li>
+                <li><a class="dropdown-item py-2 text-danger fw-semibold" href="javascript:void(0)" onclick="managerQuickSetStatus('Cancelled')"><i class="bi bi-x-circle me-2"></i>Cancel Order</a></li>
+              </ul>
+            </div>
+            <button type="button" class="btn btn-success rounded-pill px-3 fw-semibold" style="background-color: var(--primary-green);" id="btn-modal-collect-pay" onclick="openPaymentFromManagerModal()">
+              <i class="bi bi-cash-stack me-1"></i> Pay Order
             </button>
           </div>
           <div class="d-flex gap-2">
             <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" style="background-color: var(--primary-green);" onclick="viewReceiptFromManagerModal()">
-              <i class="bi bi-receipt me-1"></i> View / Print Receipt
-            </button>
           </div>
         </div>
       </div>
@@ -613,7 +693,7 @@
       let totalRevenue = 0;
 
       if (transactions.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No transactions matched your filters.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No transactions matched your filters.</td></tr>`;
         document.getElementById('total-revenue-summary').textContent = 'Total: Php 0.00';
         return;
       }
@@ -650,11 +730,6 @@
             <td class="fw-bold text-success">Php ${amt.toFixed(2)}</td>
             <td>${orderBadge}</td>
             <td>${payBadge}</td>
-            <td>
-              <span class="badge ${t.payment_method === 'GCash' ? 'bg-primary-subtle text-primary' : (t.payment_method === 'Cash' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning')}">
-                ${t.payment_method || 'Unpaid'}
-              </span>
-            </td>
             <td class="small text-muted">${dateFormatted}</td>
             <td>
               <div class="d-flex gap-1">
@@ -724,6 +799,24 @@
         collectBtn.style.display = 'inline-block';
       }
 
+      // Update status dropdown button in modal footer
+      const statusBtn = document.getElementById('managerStatusDropdownBtn');
+      const statusBtnText = document.getElementById('mgr-status-btn-text');
+      const st = order.order_status || 'Pending';
+      if (statusBtnText) statusBtnText.textContent = `Status: ${st}`;
+      if (statusBtn) {
+        statusBtn.className = 'btn rounded-pill px-3 dropdown-toggle fw-semibold ';
+        if (st === 'Completed') {
+          statusBtn.classList.add('btn-outline-success');
+        } else if (st === 'Preparing') {
+          statusBtn.classList.add('btn-outline-primary');
+        } else if (st === 'Cancelled') {
+          statusBtn.classList.add('btn-outline-danger');
+        } else {
+          statusBtn.classList.add('btn-outline-warning');
+        }
+      }
+
       new bootstrap.Modal(document.getElementById('transactionDetailsModal')).show();
     }
 
@@ -752,6 +845,38 @@
           fetchTransactions();
         } else {
           alert('Error updating order: ' + data.error);
+        }
+      } catch (err) {
+        alert('Failed to connect to server: ' + err.message);
+      }
+    }
+
+    async function managerQuickSetStatus(newStatus) {
+      if (!activeDetailOrder) return;
+
+      if (newStatus === 'Cancelled') {
+        if (!confirm(`Are you sure you want to cancel Order #${activeDetailOrder.order_id}?`)) {
+          return;
+        }
+      }
+
+      const payload = { order_status: newStatus };
+      if (newStatus === 'Cancelled') {
+        payload.payment_status = 'Failed';
+      }
+
+      try {
+        const res = await fetch(`/api/orders/${activeDetailOrder.order_id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          bootstrap.Modal.getInstance(document.getElementById('transactionDetailsModal')).hide();
+          await fetchTransactions();
+        } else {
+          alert('Error updating order status: ' + data.error);
         }
       } catch (err) {
         alert('Failed to connect to server: ' + err.message);

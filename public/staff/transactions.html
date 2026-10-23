@@ -98,14 +98,13 @@
                 <th>Total</th>
                 <th>Order Status</th>
                 <th>Payment Status</th>
-                <th>Method</th>
                 <th>Time</th>
                 <th style="width: 140px;">Action</th>
               </tr>
             </thead>
             <tbody id="staff-table-body">
               <tr>
-                <td colspan="9" class="text-center py-4 text-muted">
+                <td colspan="8" class="text-center py-4 text-muted">
                   <div class="spinner-border spinner-border-sm text-success me-2" role="status"></div>
                   Loading today's transactions...
                 </td>
@@ -162,12 +161,19 @@
             </div>
           </div>
 
-          <!-- Statuses Display -->
+          <!-- Statuses & Order Actions -->
           <div class="p-3 bg-light rounded-3 border mb-3">
-            <div class="fw-bold text-dark small text-uppercase mb-2">Statuses</div>
+            <div class="fw-bold text-dark small text-uppercase mb-2"><i class="bi bi-gear me-1"></i> Order Status & Actions</div>
             <div class="d-flex justify-content-between align-items-center mb-2">
               <span class="small text-muted">Order Status:</span>
-              <span id="s-modal-order-status-badge">-</span>
+              <div class="d-flex align-items-center gap-2">
+                <span id="s-modal-order-status-badge">-</span>
+                <select id="staff-status-dropdown" class="form-select form-select-sm" style="width: auto; min-width: 140px; display: none;" onchange="staffApplyStatusChange()">
+                  <option value="Pending">Pending</option>
+                  <option value="Preparing">Preparing</option>
+                  <option value="Cancelled">Cancel Order</option>
+                </select>
+              </div>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-1">
               <span class="small text-muted">Payment Status:</span>
@@ -177,31 +183,8 @@
               <span class="text-muted">Payment Method:</span>
               <span class="fw-semibold text-dark" id="s-modal-pay-method">Cash</span>
             </div>
-          </div>
-
-          <!-- Staff Action Controls Section -->
-          <div class="p-3 border rounded-3 bg-white mb-2" id="staff-action-container">
-            <div class="fw-bold text-dark small text-uppercase mb-2 text-success">
-              <i class="bi bi-gear me-1"></i> Order Actions
-            </div>
-            
-            <div id="staff-active-controls" class="d-flex flex-wrap gap-2 align-items-center">
-              <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-mark-prep" onclick="staffChangeStatus('Preparing')">
-                <i class="bi bi-egg-fried me-1"></i> Mark as Preparing
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-mark-pend" onclick="staffChangeStatus('Pending')">
-                <i class="bi bi-hourglass-split me-1"></i> Revert to Pending
-              </button>
-              <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold" id="btn-staff-pay" style="background-color: var(--primary-green);" onclick="openStaffPaymentModal()">
-                <i class="bi bi-cash-stack me-1"></i> Collect Payment
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" id="btn-staff-cancel" onclick="staffCancelOrder()">
-                <i class="bi bi-x-circle me-1"></i> Cancel Order
-              </button>
-            </div>
-
             <!-- Read Only Notice for Completed/Cancelled orders -->
-            <div id="staff-readonly-notice" style="display: none;">
+            <div id="staff-readonly-notice" class="mt-2" style="display: none;">
               <div class="alert alert-secondary py-2 small mb-0" id="staff-readonly-msg">
                 <i class="bi bi-lock me-1"></i> Order is finalized and read-only for staff.
               </div>
@@ -210,10 +193,10 @@
 
         </div>
         <div class="modal-footer border-0 pt-1 d-flex justify-content-between">
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" style="background-color: var(--primary-green);" onclick="viewReceiptFromStaffModal()">
-            <i class="bi bi-receipt me-1"></i> View / Print Receipt
+          <button type="button" class="btn btn-success rounded-pill px-3 fw-semibold" id="btn-staff-pay" style="background-color: var(--primary-green);" onclick="openStaffPaymentModal()">
+            <i class="bi bi-cash-stack me-1"></i> Pay Order
           </button>
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
@@ -499,7 +482,7 @@
       let shiftTotal = 0;
 
       if (staffOrders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No transactions found for today's shift.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No transactions found for today's shift.</td></tr>`;
         document.getElementById('staff-shift-total').textContent = 'Shift Total: Php 0.00';
         return;
       }
@@ -540,11 +523,6 @@
             <td class="fw-bold text-success">Php ${amt.toFixed(2)}</td>
             <td>${orderBadge}</td>
             <td>${payBadge}</td>
-            <td>
-              <span class="badge ${t.payment_method === 'GCash' ? 'bg-primary-subtle text-primary' : (t.payment_method === 'Cash' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning')}">
-                ${t.payment_method || 'Unpaid'}
-              </span>
-            </td>
             <td class="small text-muted">${timeStr}</td>
             <td>
               <div class="d-flex gap-1">
@@ -617,47 +595,52 @@
       if (payStatus === 'Refunded') payBadge = '<span class="badge-status badge-pay-refunded">Refunded</span>';
       document.getElementById('s-modal-pay-status-badge').innerHTML = payBadge;
 
-      // Staff Control Permissions:
-      // If Completed or Cancelled -> Read-Only! Staff cannot alter finalized orders
-      const controls = document.getElementById('staff-active-controls');
+      const isPaid = (payStatus === 'Verified');
+      const dropdown = document.getElementById('staff-status-dropdown');
       const readonlyNotice = document.getElementById('staff-readonly-notice');
       const readonlyMsg = document.getElementById('staff-readonly-msg');
+      const paymentButton = document.getElementById('btn-staff-pay');
 
       if (isCompleted) {
-        controls.style.display = 'none';
+        dropdown.style.display = 'none';
         readonlyNotice.style.display = 'block';
-        readonlyMsg.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> Order Completed & Verified (Read-only for staff).`;
+        readonlyMsg.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Order Completed & Verified (Read-only for staff).';
+        paymentButton.style.display = 'none';
       } else if (isCancelled) {
-        controls.style.display = 'none';
+        dropdown.style.display = 'none';
         readonlyNotice.style.display = 'block';
-        readonlyMsg.innerHTML = `<i class="bi bi-x-circle-fill text-danger me-1"></i> Order Cancelled (Read-only for staff).`;
+        readonlyMsg.innerHTML = '<i class="bi bi-x-circle-fill text-danger me-1"></i> Order Cancelled (Read-only for staff).';
+        paymentButton.style.display = 'none';
       } else {
-        controls.style.display = 'flex';
+        dropdown.style.display = 'inline-block';
+        dropdown.value = order.order_status || 'Pending';
         readonlyNotice.style.display = 'none';
-
-        // Toggle buttons based on current state
-        const btnPrep = document.getElementById('btn-mark-prep');
-        const btnPend = document.getElementById('btn-mark-pend');
-
-        if (order.order_status === 'Pending') {
-          btnPrep.style.display = 'inline-block';
-          btnPend.style.display = 'none';
-        } else if (order.order_status === 'Preparing') {
-          btnPrep.style.display = 'none';
-          btnPend.style.display = 'inline-block';
-        }
+        paymentButton.style.display = isPaid ? 'none' : 'inline-block';
       }
 
       new bootstrap.Modal(document.getElementById('staffDetailsModal')).show();
     }
 
-    async function staffChangeStatus(newStatus) {
+    async function staffApplyStatusChange() {
       if (!currentStaffDetailOrder) return;
+      const dropdown = document.getElementById('staff-status-dropdown');
+      const newStatus = dropdown.value;
+
+      if (newStatus === 'Cancelled') {
+        if (!confirm('Are you sure you want to cancel Order #' + currentStaffDetailOrder.order_id + '? This action cannot be undone by staff.')) {
+          dropdown.value = currentStaffDetailOrder.order_status || 'Pending';
+          return;
+        }
+      }
+
+      const payload = { order_status: newStatus };
+      if (newStatus === 'Cancelled') payload.payment_status = 'Failed';
+
       try {
-        const res = await fetch(`/api/orders/${currentStaffDetailOrder.order_id}/status`, {
+        const res = await fetch('/api/orders/' + currentStaffDetailOrder.order_id + '/status', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_status: newStatus })
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (data.success) {
@@ -665,33 +648,11 @@
           fetchStaffTransactions();
         } else {
           alert('Error updating status: ' + data.error);
+          dropdown.value = currentStaffDetailOrder.order_status || 'Pending';
         }
       } catch (err) {
         alert('Server communication error: ' + err.message);
-      }
-    }
-
-    async function staffCancelOrder() {
-      if (!currentStaffDetailOrder) return;
-      if (!confirm(`Are you sure you want to cancel Order #${currentStaffDetailOrder.order_id}? This action cannot be undone.`)) {
-        return;
-      }
-
-      try {
-        const res = await fetch(`/api/orders/${currentStaffDetailOrder.order_id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ order_status: 'Cancelled', payment_status: 'Failed' })
-        });
-        const data = await res.json();
-        if (data.success) {
-          bootstrap.Modal.getInstance(document.getElementById('staffDetailsModal')).hide();
-          fetchStaffTransactions();
-        } else {
-          alert('Error cancelling order: ' + data.error);
-        }
-      } catch (err) {
-        alert('Server communication error: ' + err.message);
+        dropdown.value = currentStaffDetailOrder.order_status || 'Pending';
       }
     }
 
@@ -965,9 +926,9 @@
       }
 
       if (staffExportFormat === 'CSV') {
-        let csv = 'Order ID,Customer Name,Order Type,Amount,Payment Method,Payment Status,Order Status,Date Time\n';
+        let csv = 'Order ID,Customer Name,Order Type,Amount,Payment Status,Order Status,Date Time\n';
         staffOrders.forEach(t => {
-          csv += `"${t.order_id}","${(t.cust_name || '').replace(/"/g, '""')}","${t.order_type || 'Dine-In'}","${t.order_total}","${t.payment_method || 'Unpaid'}","${t.payment_status || 'Pending'}","${t.order_status}","${t.order_datetime}"\n`;
+          csv += `"${t.order_id}","${(t.cust_name || '').replace(/"/g, '""')}","${t.order_type || 'Dine-In'}","${t.order_total}","${t.payment_status || 'Pending'}","${t.order_status}","${t.order_datetime}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
