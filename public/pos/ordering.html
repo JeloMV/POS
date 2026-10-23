@@ -127,6 +127,60 @@
 
   </main>
 
+  <!-- SAVE ORDER CONFIRMATION MODAL -->
+  <div class="modal fade" id="saveOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+      <div class="modal-content border-0 p-3 shadow-lg">
+        <div class="modal-header border-0 pb-1">
+          <div>
+            <h5 class="modal-title fw-bold text-dark">Save Order for Later</h5>
+            <small class="text-muted">Customer will pay at the counter when ready.</small>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-2">
+          <!-- Order summary preview -->
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="fw-bold text-dark small text-uppercase mb-2">Order Summary</div>
+            <div id="save-modal-items-preview" class="small"></div>
+            <div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
+              <span>Total Amount:</span>
+              <span class="text-success" id="save-modal-total">Php 0.00</span>
+            </div>
+          </div>
+
+          <!-- Customer info (read-only preview) -->
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="fw-bold text-dark small text-uppercase mb-2">Customer Info</div>
+            <div class="small d-flex justify-content-between mb-1">
+              <span class="text-muted">Name:</span>
+              <span class="fw-semibold" id="save-modal-cust-name">Walk-in Customer</span>
+            </div>
+            <div class="small d-flex justify-content-between mb-1">
+              <span class="text-muted">Contact:</span>
+              <span class="fw-semibold" id="save-modal-cust-contact">—</span>
+            </div>
+            <div class="small d-flex justify-content-between">
+              <span class="text-muted">Order Type:</span>
+              <span class="fw-semibold" id="save-modal-order-type">Dine-In</span>
+            </div>
+          </div>
+
+          <div class="alert alert-warning py-2 small mb-0">
+            <i class="bi bi-clock-history me-1"></i>
+            Order will be saved as <strong>Pending</strong>. Staff can collect payment later via the transactions list.
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-2">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" style="background-color: var(--primary-green); border-color: var(--primary-green);" onclick="confirmSaveOrder()">
+            <i class="bi bi-save me-1"></i> Confirm Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- PRODUCT CUSTOMIZATION MODAL -->
   <div class="modal fade responsive-order-modal" id="customizeProductModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -690,8 +744,31 @@
 
     async function saveOrderPending() {
       if (cart.length === 0) return;
-      const user = window.getCurrentUser ? window.getCurrentUser() : { branch: 'Balagtas' };
 
+      // Populate save modal preview
+      let grandTotal = 0;
+      const itemsHtml = cart.map(item => {
+        grandTotal += item.subtotal;
+        const addonsText = item.addons && item.addons.length
+          ? `<div class="text-muted" style="font-size:0.78rem;padding-left:10px;">+ ${item.addons.map(a => a.addon_name).join(', ')}</div>`
+          : '';
+        return `<div class="d-flex justify-content-between py-1 border-bottom">
+          <div><span class="fw-semibold">${item.quantity}x ${item.item_name}</span>${addonsText}</div>
+          <span>Php ${item.subtotal.toFixed(2)}</span>
+        </div>`;
+      }).join('');
+
+      document.getElementById('save-modal-items-preview').innerHTML = itemsHtml;
+      document.getElementById('save-modal-total').textContent = `Php ${grandTotal.toFixed(2)}`;
+      document.getElementById('save-modal-cust-name').textContent = document.getElementById('cust_name').value.trim() || 'Walk-in Customer';
+      document.getElementById('save-modal-cust-contact').textContent = document.getElementById('contact_number').value.trim() || '—';
+      document.getElementById('save-modal-order-type').textContent = selectedOrderType;
+
+      new bootstrap.Modal(document.getElementById('saveOrderModal')).show();
+    }
+
+    async function confirmSaveOrder() {
+      const user = window.getCurrentUser ? window.getCurrentUser() : { branch: 'Balagtas' };
       const payload = {
         cust_name: document.getElementById('cust_name').value.trim() || 'Walk-in Customer',
         contact_number: document.getElementById('contact_number').value.trim(),
@@ -702,6 +779,10 @@
         items: cart
       };
 
+      const btn = document.querySelector('#saveOrderModal .btn-success');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Saving...`;
+
       try {
         const res = await fetch('/api/orders', {
           method: 'POST',
@@ -710,13 +791,20 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert(`Order #${data.order_id} recorded as Pending! Customer can pay later at the register.`);
+          bootstrap.Modal.getInstance(document.getElementById('saveOrderModal')).hide();
           clearCart();
+          document.getElementById('cust_name').value = '';
+          document.getElementById('contact_number').value = '';
+          document.getElementById('other_contact').value = '';
+          showToast(`Order #${data.order_id} saved as Pending. Customer can pay at the counter.`, 'success');
         } else {
-          alert('Error saving order: ' + data.error);
+          showToast('Error saving order: ' + data.error, 'danger');
         }
       } catch (err) {
-        alert('Failed to connect to server: ' + err.message);
+        showToast('Failed to connect to server: ' + err.message, 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-save me-1"></i> Confirm Save`;
       }
     }
 

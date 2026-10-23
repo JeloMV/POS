@@ -103,6 +103,99 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.patch('/:id', async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const {
+      cust_name,
+      contact_number,
+      other_contact,
+      notes,
+      order_type,
+      order_status,
+      payment_status
+    } = req.body;
+
+    const allowed_order = ['Pending', 'Preparing', 'Completed', 'Cancelled'];
+    const allowed_payment = ['Pending', 'Verified', 'Failed', 'Refunded'];
+
+    if (order_status && !allowed_order.includes(order_status)) {
+      return res.status(400).json({ success: false, error: 'Invalid order_status value' });
+    }
+    if (payment_status && !allowed_payment.includes(payment_status)) {
+      return res.status(400).json({ success: false, error: 'Invalid payment_status value' });
+    }
+
+    const updates = [];
+    const params = [];
+
+    if (cust_name !== undefined) { updates.push('cust_name = ?'); params.push(cust_name); }
+    if (contact_number !== undefined) { updates.push('contact_number = ?'); params.push(contact_number); }
+    if (other_contact !== undefined) { updates.push('other_contact = ?'); params.push(other_contact); }
+    if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
+    if (order_type !== undefined) { updates.push('order_type = ?'); params.push(order_type); }
+    if (order_status !== undefined) { updates.push('order_status = ?'); params.push(order_status); }
+
+    if (updates.length > 0) {
+      params.push(orderId);
+      await db.query(`UPDATE orders SET ${updates.join(', ')} WHERE order_id = ?`, params);
+    }
+
+    if (payment_status !== undefined) {
+      const [existingPay] = await db.query('SELECT payment_id FROM payments WHERE order_id = ?', [orderId]);
+      if (existingPay.length > 0) {
+        await db.query('UPDATE payments SET payment_status = ? WHERE order_id = ?', [payment_status, orderId]);
+      } else {
+        // If updating payment_status for an unpaid order (e.g. Failed / Pending)
+        const [orders] = await db.query('SELECT order_total FROM orders WHERE order_id = ?', [orderId]);
+        const orderTotal = orders.length ? orders[0].order_total : 0;
+        await db.query(
+          `INSERT INTO payments (order_id, payment_method, amount_due, amount_paid, change_amount, payment_status)
+           VALUES (?, 'Cash', ?, 0, 0, ?)`,
+          [orderId, orderTotal, payment_status]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Order updated successfully' });
+  } catch (error) {
+    console.error('Order update error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { order_status, payment_status } = req.body;
+
+    const allowed_order = ['Pending', 'Preparing', 'Completed', 'Cancelled'];
+    const allowed_payment = ['Pending', 'Verified', 'Failed', 'Refunded'];
+
+    if (order_status && !allowed_order.includes(order_status)) {
+      return res.status(400).json({ success: false, error: 'Invalid order_status value' });
+    }
+    if (payment_status && !allowed_payment.includes(payment_status)) {
+      return res.status(400).json({ success: false, error: 'Invalid payment_status value' });
+    }
+
+    if (order_status) {
+      await db.query('UPDATE orders SET order_status = ? WHERE order_id = ?', [order_status, orderId]);
+    }
+    if (payment_status) {
+      const [existingPay] = await db.query('SELECT payment_id FROM payments WHERE order_id = ?', [orderId]);
+      if (existingPay.length > 0) {
+        await db.query('UPDATE payments SET payment_status = ? WHERE order_id = ?', [payment_status, orderId]);
+      }
+    }
+
+    res.json({ success: true, message: 'Status updated' });
+  } catch (error) {
+    console.error('Status update error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 router.post('/:id/pay', async (req, res) => {
   const connection = await db.getConnection();
   try {
@@ -130,28 +223,57 @@ router.post('/:id/pay', async (req, res) => {
     const paid = parseFloat(amount_paid !== undefined ? amount_paid : due);
     const change = parseFloat(change_amount !== undefined ? change_amount : Math.max(0, paid - due));
 
-    const [payResult] = await connection.query(
-      `INSERT INTO payments (order_id, payment_method, amount_due, amount_paid, change_amount, gcash_reference_number, payment_status, paymongo_payment_intent_id, paid_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'Verified', ?, NOW())`,
-      [
-        orderId,
-        payment_method || 'Cash',
-        due,
-        paid,
-        change,
-        gcash_reference_number || null,
-        paymongo_payment_intent_id || null
-      ]
-    );
+    let paymentId;
+    const [existingPay] = await connection.query('SELECT payment_id FROM payments WHERE order_id = ?', [orderId]);
+    if (existingPay.length > 0) {
+      paymentId = existingPay[0].payment_id;
+      await connection.query(
+        `UPDATE payments
+         SET payment_method = ?, amount_due = ?, amount_paid = ?, change_amount = ?, gcash_reference_number = ?, payment_status = 'Verified', paymongo_payment_intent_id = ?, paid_at = NOW()
+         WHERE payment_id = ?`,
+        [
+          payment_method || 'Cash',
+          due,
+          paid,
+          change,
+          gcash_reference_number || null,
+          paymongo_payment_intent_id || null,
+          paymentId
+        ]
+      );
+    } else {
+      const [payResult] = await connection.query(
+        `INSERT INTO payments (order_id, payment_method, amount_due, amount_paid, change_amount, gcash_reference_number, payment_status, paymongo_payment_intent_id, paid_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'Verified', ?, NOW())`,
+        [
+          orderId,
+          payment_method || 'Cash',
+          due,
+          paid,
+          change,
+          gcash_reference_number || null,
+          paymongo_payment_intent_id || null
+        ]
+      );
+      paymentId = payResult.insertId;
+    }
 
-    const paymentId = payResult.insertId;
-    const txnNumber = generateTxnNumber();
-
-    const [receiptResult] = await connection.query(
-      `INSERT INTO receipts (order_id, payment_id, transaction_number, receipt_type, issued_at)
-       VALUES (?, ?, ?, ?, NOW())`,
-      [orderId, paymentId, txnNumber, receipt_type || 'Printed']
-    );
+    let txnNumber;
+    let receiptId;
+    const [existingReceipt] = await connection.query('SELECT receipt_id, transaction_number FROM receipts WHERE order_id = ?', [orderId]);
+    if (existingReceipt.length > 0) {
+      receiptId = existingReceipt[0].receipt_id;
+      txnNumber = existingReceipt[0].transaction_number;
+      await connection.query('UPDATE receipts SET payment_id = ?, issued_at = NOW() WHERE receipt_id = ?', [paymentId, receiptId]);
+    } else {
+      txnNumber = generateTxnNumber();
+      const [receiptResult] = await connection.query(
+        `INSERT INTO receipts (order_id, payment_id, transaction_number, receipt_type, issued_at)
+         VALUES (?, ?, ?, ?, NOW())`,
+        [orderId, paymentId, txnNumber, receipt_type || 'Printed']
+      );
+      receiptId = receiptResult.insertId;
+    }
 
     await connection.query(
       `UPDATE orders SET order_status = 'Completed' WHERE order_id = ?`,
@@ -164,7 +286,7 @@ router.post('/:id/pay', async (req, res) => {
       success: true,
       payment_id: paymentId,
       transaction_number: txnNumber,
-      receipt_id: receiptResult.insertId,
+      receipt_id: receiptId,
       change_amount: change,
       message: 'Payment verified and receipt generated'
     });
@@ -194,12 +316,12 @@ router.get('/', async (req, res) => {
         o.branch_name,
         o.order_type,
         p.payment_id,
-        p.payment_method,
-        p.amount_due,
-        p.amount_paid,
-        p.change_amount,
+        COALESCE(p.payment_method, 'Unpaid') AS payment_method,
+        COALESCE(p.amount_due, o.order_total) AS amount_due,
+        COALESCE(p.amount_paid, 0.00) AS amount_paid,
+        COALESCE(p.change_amount, 0.00) AS change_amount,
         p.gcash_reference_number,
-        p.payment_status,
+        COALESCE(p.payment_status, IF(o.order_status = 'Cancelled', 'Failed', 'Pending')) AS payment_status,
         p.paid_at,
         r.receipt_id,
         r.transaction_number,
@@ -298,8 +420,15 @@ router.get('/:id', async (req, res) => {
   try {
     const orderId = req.params.id;
     const [orders] = await db.query(
-      `SELECT o.*, p.payment_id, p.payment_method, p.amount_due, p.amount_paid, p.change_amount,
-              p.gcash_reference_number, p.payment_status, p.paid_at,
+      `SELECT o.*,
+              p.payment_id,
+              COALESCE(p.payment_method, 'Unpaid') AS payment_method,
+              COALESCE(p.amount_due, o.order_total) AS amount_due,
+              COALESCE(p.amount_paid, 0.00) AS amount_paid,
+              COALESCE(p.change_amount, 0.00) AS change_amount,
+              p.gcash_reference_number,
+              COALESCE(p.payment_status, IF(o.order_status = 'Cancelled', 'Failed', 'Pending')) AS payment_status,
+              p.paid_at,
               r.receipt_id, r.transaction_number, r.issued_at
        FROM orders o
        LEFT JOIN payments p ON o.order_id = p.order_id
