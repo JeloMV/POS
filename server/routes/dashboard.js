@@ -52,20 +52,58 @@ router.get('/stats', async (req, res) => {
     const activeBranch = branch && branch !== 'All Branches' ? branch : 'Balagtas';
     const alerts = [];
 
-    if (totalOrders >= 5) {
+    // 1. Dynamic Surge / Velocity Check: Orders placed in the last 1 hour
+    let surgeSql = `SELECT COUNT(*) AS recent_count, COALESCE(SUM(order_total), 0) AS recent_sales
+                    FROM orders
+                    WHERE order_datetime >= NOW() - INTERVAL 1 HOUR
+                      AND order_status != 'Cancelled'`;
+    const surgeParams = [];
+    if (branch && branch !== 'All Branches') {
+      surgeSql += ' AND branch_name = ?';
+      surgeParams.push(branch);
+    }
+    const [surgeRows] = await db.query(surgeSql, surgeParams);
+    const recentOrders = surgeRows[0]?.recent_count || 0;
+
+    const normalHourlyStandard = 5; // Standard operational baseline
+    if (recentOrders >= normalHourlyStandard) {
       alerts.push({
         type: 'warning',
         title: `${activeBranch} Branch: High Sales Velocity`,
-        message: 'Order volume is above normal standard. Active product items for sale might approach insufficient stock levels. Coordinate with commissary if replenishment is needed.'
+        message: `Surge alert: ${recentOrders} orders placed in the last 60 minutes (above standard rate of ${normalHourlyStandard}/hr). Kitchen supplies and active items may approach insufficient levels.`
       });
     } else {
       alerts.push({
         type: 'info',
         title: `${activeBranch} Branch: Standard Sales Rate`,
-        message: 'Sales volume within standard operational limits. Product supply currently sufficient for ongoing orders.'
+        message: `Operations steady: ${recentOrders} order(s) placed in the past hour. Sales volume is within standard operational thresholds.`
       });
     }
 
+    // 2. Dynamic Product Demand / Depletion Risk Check
+    let itemSql = `SELECT p.product_name, SUM(oi.quantity) AS sold_qty
+                   FROM order_items oi
+                   JOIN orders o ON oi.order_id = o.order_id
+                   JOIN menu_products p ON oi.product_id = p.product_id
+                   WHERE DATE(o.order_datetime) = CURDATE()
+                     AND o.order_status != 'Cancelled'`;
+    const itemParams = [];
+    if (branch && branch !== 'All Branches') {
+      itemSql += ' AND o.branch_name = ?';
+      itemParams.push(branch);
+    }
+    itemSql += ' GROUP BY p.product_id, p.product_name ORDER BY sold_qty DESC LIMIT 1';
+
+    const [fastItems] = await db.query(itemSql, itemParams);
+    if (fastItems.length > 0 && fastItems[0].sold_qty >= 5) {
+      alerts.push({
+        type: 'warning',
+        title: `${activeBranch} Branch: Fast-Moving Product Alert`,
+        message: `'${fastItems[0].product_name}' has reached ${fastItems[0].sold_qty} portions sold today. Verify prep stock or commissary replenishment to prevent stockouts.`
+      });
+    }
+
+    // 3. Dynamic Cash / GCash Reconciliation Check
     const paidCount = cashCount + gcashCount;
     if (paidCount > 0) {
       const gcashPct = Math.round((gcashCount / paidCount) * 100);
@@ -73,13 +111,13 @@ router.get('/stats', async (req, res) => {
         alerts.push({
           type: 'info',
           title: `${activeBranch} Branch: High Digital Payment Ratio`,
-          message: `Strong customer GCash payments (${gcashPct}% of total orders). The physical cash register may require monitoring for available cash change during cash purchases.`
+          message: `Strong GCash adoption (${gcashPct}% of today's verified orders). Ensure adequate physical loose change is reserved for remaining cash purchases.`
         });
       } else {
         alerts.push({
           type: 'info',
           title: `${activeBranch} Branch: Consistent Cash Volume`,
-          message: `Cash payments account for ${100 - gcashPct}% of sales. Ensure scheduled mid-shift cash drops are executed to the store safe.`
+          message: `Cash payments account for ${100 - gcashPct}% of revenue today. Perform mid-shift cash drops to the store safe according to standard operating procedure.`
         });
       }
     } else {
