@@ -16,33 +16,6 @@
       max-width: 1220px;
       margin-left: 0;
     }
-    .modal-info-card {
-      background: #ffffff;
-      border: 1px solid #eef2ef;
-      border-radius: 16px;
-      padding: 14px 18px;
-      margin-bottom: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-    }
-    .modal-info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 5px;
-      font-size: 0.9rem;
-    }
-    .modal-info-row:last-child {
-      margin-bottom: 0;
-    }
-    .modal-info-label {
-      color: #7b8b7d;
-      font-weight: 500;
-    }
-    .modal-info-val {
-      color: #111111;
-      font-weight: 700;
-      text-align: right;
-    }
     .filter-card {
       background: #ffffff;
       border: 1.5px solid var(--border-color);
@@ -129,6 +102,15 @@
             <button class="btn btn-sm btn-outline-secondary w-100" onclick="resetFilters()" title="Reset All Filters">Reset</button>
           </div>
         </div>
+
+        <!-- Quick Date Range Chips -->
+        <div class="d-flex flex-wrap gap-2 mt-3 pt-2 border-top align-items-center">
+          <span class="small text-muted fw-semibold me-1">Quick Ranges:</span>
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 py-0" onclick="setDateRange('today')">Today</button>
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 py-0" onclick="setDateRange('week')">This Week</button>
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 py-0" onclick="setDateRange('month')">This Month</button>
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-3 py-0" onclick="setDateRange('all')">All Historical Data</button>
+        </div>
       </div>
 
       <!-- Transactions Table -->
@@ -167,105 +149,144 @@
     </div>
   </main>
 
-  <!-- MANAGER TRANSACTION DETAILS MODAL (3-CARD DESIGN MATCHING UI) -->
+  <!-- MANAGER TRANSACTION DETAILS & EDIT MODAL -->
   <div class="modal fade" id="transactionDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
-      <div class="modal-content border-0 p-3 shadow-lg" style="border-radius: 24px;">
-        
-        <!-- Header -->
-        <div class="modal-header border-0 pb-1 align-items-center">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 620px;">
+      <div class="modal-content border-0 p-3 shadow-lg">
+        <div class="modal-header border-0 pb-1">
           <div class="d-flex align-items-center gap-2">
-            <h5 class="modal-title fw-bold text-dark mb-0 fs-5">Order Details</h5>
-            <span id="m-modal-badge" class="badge rounded-pill px-3 py-1" style="background: #fff8e6; color: #b7791f; font-weight: 600; font-size: 0.8rem;">For payment</span>
+            <div class="badge bg-success p-2 rounded-circle"><i class="bi bi-shield-check"></i></div>
+            <div>
+              <h5 class="modal-title fw-bold text-dark mb-0">Order Details & Management</h5>
+              <small class="text-muted">Manager can edit customer info and update statuses anytime.</small>
+            </div>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-
         <div class="modal-body py-2">
           
-          <!-- Card 1: Order Metadata -->
-          <div class="modal-info-card">
-            <div class="modal-info-row">
-              <span class="modal-info-label">Order No.</span>
-              <span class="modal-info-val" id="modal-detail-order-id">0005</span>
+          <!-- Order Metadata Bar -->
+          <div class="p-2 px-3 bg-light rounded-3 border mb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+              <span class="text-muted small">Order #: </span>
+              <span class="fw-bold text-dark" id="modal-detail-order-id">#0000</span>
             </div>
-            <div class="modal-info-row">
-              <span class="modal-info-label">Branch</span>
-              <span class="modal-info-val" id="modal-detail-branch">Balagtas</span>
+            <div>
+              <span class="text-muted small">Txn #: </span>
+              <span class="fw-bold text-dark" id="modal-detail-txn-no">TXN-0000</span>
             </div>
-            <div class="modal-info-row">
-              <span class="modal-info-label">Order type</span>
-              <span class="modal-info-val" id="modal-detail-type">Take-out</span>
+            <div>
+              <span class="text-muted small">Branch: </span>
+              <span class="fw-semibold text-dark" id="modal-detail-branch">Balagtas</span>
             </div>
-            <div class="modal-info-row">
-              <span class="modal-info-label">Customer</span>
-              <span class="modal-info-val" id="modal-detail-cust" style="cursor: pointer;" title="Click to edit customer name" onclick="promptEditManagerCustomer()">
-                <span id="modal-cust-text">Walk-in</span> <i class="bi bi-pencil-square text-muted ms-1" style="font-size: 0.78rem;"></i>
-              </span>
-            </div>
-            <div class="modal-info-row">
-              <span class="modal-info-label">Created</span>
-              <span class="modal-info-val" id="modal-detail-datetime">2026-10-23 07:25:53</span>
-            </div>
-            <div class="modal-info-row">
-              <span class="modal-info-label">Taken by</span>
-              <span class="modal-info-val" id="modal-detail-taken-by">Francis Pablo</span>
+            <div>
+              <span class="text-muted small">Date: </span>
+              <span class="fw-semibold text-dark" id="modal-detail-datetime">-</span>
             </div>
           </div>
 
-          <!-- Card 2: Order Summary -->
-          <div class="modal-info-card">
-            <div class="fw-bold text-dark mb-2" style="font-size: 0.95rem;">Order Summary</div>
-            <div id="modal-detail-items-list">
-              <!-- Item list injected by JS -->
+          <!-- Editable Customer & Order Settings Form -->
+          <div class="card border rounded-3 p-3 mb-3 bg-white">
+            <div class="fw-bold text-dark small text-uppercase mb-2 text-success">
+              <i class="bi bi-pencil-square me-1"></i> Editable Details
             </div>
-            <hr class="my-2" style="border-color: #eef2ef;">
-            <div class="d-flex justify-content-between align-items-center fw-bold" style="font-size: 1rem;">
-              <span class="text-dark">Total Amount</span>
-              <span class="text-dark" id="modal-detail-total">Php 35.00</span>
+            <div class="row g-2">
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold text-muted mb-1">Customer Name</label>
+                <input type="text" id="edit-cust-name" class="form-control form-control-sm" placeholder="Customer name">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small fw-semibold text-muted mb-1">Contact Number</label>
+                <input type="text" id="edit-contact-no" class="form-control form-control-sm" placeholder="09xxxxxxxxx">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Order Type</label>
+                <select id="edit-order-type" class="form-select form-select-sm">
+                  <option value="Dine-In">Dine-In</option>
+                  <option value="Take-Out">Take-Out</option>
+                  <option value="Phone">Phone</option>
+                  <option value="Online">Online</option>
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Order Status</label>
+                <select id="edit-order-status" class="form-select form-select-sm">
+                  <option value="Pending">Pending (Unpaid)</option>
+                  <option value="Preparing">Preparing</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Payment Status</label>
+                <select id="edit-payment-status" class="form-select form-select-sm">
+                  <option value="Pending">Pending</option>
+                  <option value="Verified">Verified</option>
+                  <option value="Failed">Failed</option>
+                  <option value="Refunded">Refunded</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label small fw-semibold text-muted mb-1">Order Notes</label>
+                <input type="text" id="edit-notes" class="form-control form-control-sm" placeholder="Special instructions / notes">
+              </div>
+            </div>
+            <div class="d-flex justify-content-end mt-2">
+              <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" onclick="saveManagerOrderChanges()">
+                <i class="bi bi-check2 me-1"></i> Save Changes
+              </button>
             </div>
           </div>
 
-          <!-- Card 3: Payment -->
-          <div class="modal-info-card mb-2">
-            <div class="fw-bold text-dark mb-2" style="font-size: 0.95rem;">Payment</div>
-            <div id="modal-detail-payment-content" class="text-muted" style="font-size: 0.9rem;">
-              No payment recorded yet.
+          <!-- Order Items Summary (Read-Only) -->
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="fw-bold text-dark small text-uppercase">Order Items Summary</span>
+              <span class="text-muted small" style="font-size: 0.75rem;">(Financial items are immutable)</span>
+            </div>
+            <div id="modal-detail-items-list" class="small"></div>
+            <div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
+              <span>Total Amount:</span>
+              <span class="text-success fs-6" id="modal-detail-total">Php 0.00</span>
+            </div>
+          </div>
+
+          <!-- Payment Info Summary -->
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="fw-bold text-dark small text-uppercase mb-2">Payment Details</div>
+            <div class="row g-2 small">
+              <div class="col-6">
+                <span class="text-muted">Payment Method:</span>
+                <span class="fw-semibold text-dark ms-1" id="modal-detail-pay-method">Cash</span>
+              </div>
+              <div class="col-6">
+                <span class="text-muted">Amount Paid:</span>
+                <span class="fw-semibold text-dark ms-1" id="modal-detail-amount-paid">Php 0.00</span>
+              </div>
+              <div class="col-6">
+                <span class="text-muted">Change Given:</span>
+                <span class="fw-semibold text-dark ms-1" id="modal-detail-change">Php 0.00</span>
+              </div>
+              <div class="col-6">
+                <span class="text-muted">GCash / PayMongo Ref:</span>
+                <span class="fw-semibold text-dark ms-1" id="modal-detail-ref">—</span>
+              </div>
             </div>
           </div>
 
         </div>
-
-        <!-- Modal Footer: 3 Action Buttons -->
-        <div class="modal-footer border-0 pt-1 pb-1 px-1 d-flex justify-content-between align-items-center">
-          
-          <!-- Button 1: Order Status Dropdown / Button (Manager can change anytime) -->
-          <div class="dropdown">
-            <button class="btn btn-outline-secondary rounded-pill px-3 dropdown-toggle fw-semibold" type="button" id="managerStatusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.88rem;">
-              <span id="manager-status-btn-text">Status: Pending</span>
-            </button>
-            <ul class="dropdown-menu shadow-sm">
-              <li><h6 class="dropdown-header small text-muted">Change Order Status</h6></li>
-              <li><a class="dropdown-item py-1 fw-semibold" href="javascript:void(0)" onclick="managerChangeOrderStatus('Pending')"><span class="badge badge-status badge-pending me-2">●</span>Pending</a></li>
-              <li><a class="dropdown-item py-1 fw-semibold" href="javascript:void(0)" onclick="managerChangeOrderStatus('Preparing')"><span class="badge badge-status badge-preparing me-2">●</span>Preparing</a></li>
-              <li><a class="dropdown-item py-1 fw-semibold" href="javascript:void(0)" onclick="managerChangeOrderStatus('Completed')"><span class="badge badge-status badge-completed me-2">●</span>Completed</a></li>
-              <li><hr class="dropdown-divider my-1"></li>
-              <li><a class="dropdown-item py-1 text-danger fw-semibold" href="javascript:void(0)" onclick="managerChangeOrderStatus('Cancelled')"><i class="bi bi-x-circle me-2"></i>Cancelled</a></li>
-            </ul>
-          </div>
-
-          <div class="d-flex gap-2 align-items-center">
-            <!-- Button 2: Collect payment (Pay order) -->
-            <button type="button" class="btn btn-success rounded-pill px-3 px-sm-4 fw-semibold" id="btn-manager-modal-pay" style="background-color: #1e5631; border-color: #1e5631; font-size: 0.9rem;" onclick="openPaymentFromManagerModal()">
-              Collect payment
-            </button>
-
-            <!-- Button 3: Close / Ok -->
-            <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background-color: #4361ee; border-color: #4361ee; font-size: 0.9rem;" data-bs-dismiss="modal">
-              Ok
+        <div class="modal-footer border-0 pt-2 d-flex justify-content-between">
+          <div>
+            <button type="button" class="btn btn-outline-success rounded-pill px-3" id="btn-modal-collect-pay" onclick="openPaymentFromManagerModal()">
+              <i class="bi bi-cash-stack me-1"></i> Collect Payment
             </button>
           </div>
-
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" style="background-color: var(--primary-green);" onclick="viewReceiptFromManagerModal()">
+              <i class="bi bi-receipt me-1"></i> View / Print Receipt
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -658,157 +679,82 @@
 
       activeDetailOrder = order;
 
-      // Header Badge matching design
-      const badgeEl = document.getElementById('m-modal-badge');
-      if (order.order_status === 'Completed') {
-        badgeEl.style.background = '#e6f6ec';
-        badgeEl.style.color = '#1e5631';
-        badgeEl.textContent = 'Completed';
-      } else if (order.order_status === 'Preparing') {
-        badgeEl.style.background = '#e8f0fe';
-        badgeEl.style.color = '#1a73e8';
-        badgeEl.textContent = 'Preparing';
-      } else if (order.order_status === 'Cancelled') {
-        badgeEl.style.background = '#fde8e8';
-        badgeEl.style.color = '#c53030';
-        badgeEl.textContent = 'Cancelled';
-      } else {
-        badgeEl.style.background = '#fff8e6';
-        badgeEl.style.color = '#b7791f';
-        badgeEl.textContent = 'For payment';
-      }
-
-      // Card 1: Metadata
-      document.getElementById('modal-detail-order-id').textContent = String(order.order_id).padStart(4, '0');
+      document.getElementById('modal-detail-order-id').textContent = `#${String(order.order_id).padStart(4, '0')}`;
+      document.getElementById('modal-detail-txn-no').textContent = order.transaction_number || 'Pending';
       document.getElementById('modal-detail-branch').textContent = order.branch_name || 'Balagtas';
-      document.getElementById('modal-detail-type').textContent = order.order_type || 'Take-out';
-      document.getElementById('modal-cust-text').textContent = order.cust_name || 'Walk-in';
-      document.getElementById('modal-detail-datetime').textContent = order.order_datetime 
-        ? new Date(order.order_datetime).toISOString().replace('T', ' ').slice(0, 19)
-        : '-';
-      
-      const user = window.getCurrentUser ? window.getCurrentUser() : { name: 'Francis Pablo' };
-      document.getElementById('modal-detail-taken-by').textContent = user.name || 'Francis Pablo';
+      document.getElementById('modal-detail-datetime').textContent = new Date(order.order_datetime).toLocaleString();
 
-      // Card 2: Items Summary
+      // Editable form controls
+      document.getElementById('edit-cust-name').value = order.cust_name || 'Walk-in Customer';
+      document.getElementById('edit-contact-no').value = order.contact_number || '';
+      document.getElementById('edit-order-type').value = order.order_type || 'Dine-In';
+      document.getElementById('edit-order-status').value = order.order_status || 'Pending';
+      document.getElementById('edit-payment-status').value = order.payment_status || 'Pending';
+      document.getElementById('edit-notes').value = order.notes || '';
+
+      // Payment details display
+      document.getElementById('modal-detail-pay-method').textContent = order.payment_method || 'Unpaid';
+      document.getElementById('modal-detail-amount-paid').textContent = `Php ${Number(order.amount_paid || 0).toFixed(2)}`;
+      document.getElementById('modal-detail-change').textContent = `Php ${Number(order.change_amount || 0).toFixed(2)}`;
+      document.getElementById('modal-detail-ref').textContent = order.gcash_reference_number || '—';
+
+      // Items list
       const itemsContainer = document.getElementById('modal-detail-items-list');
       if (order.items && order.items.length > 0) {
-        itemsContainer.innerHTML = order.items.map(i => {
-          let addonsText = '';
-          if (i.addons && i.addons.length) {
-            addonsText = i.addons.map(a => a.addon_name + (a.addon_price > 0 ? ` (+Php ${Number(a.addon_price).toFixed(2)})` : '')).join(' • ');
-          }
-          return `
-            <div class="d-flex justify-content-between align-items-start py-1">
-              <div>
-                <div class="text-dark fw-semibold" style="font-size: 0.92rem;">${i.quantity} × ${i.item_name}</div>
-                ${addonsText ? `<div class="text-muted small" style="font-size: 0.8rem;">${addonsText}</div>` : ''}
-              </div>
-              <div class="text-dark fw-semibold" style="font-size: 0.92rem;">Php ${Number(i.subtotal).toFixed(2)}</div>
+        itemsContainer.innerHTML = order.items.map(i => `
+          <div class="d-flex justify-content-between py-1 border-bottom">
+            <div>
+              <span class="fw-semibold text-dark">${i.quantity}x ${i.item_name}</span>
+              ${i.addons && i.addons.length ? `<div class="text-muted" style="font-size: 0.75rem;">+ ${i.addons.map(a => a.addon_name).join(', ')}</div>` : ''}
             </div>
-          `;
-        }).join('');
+            <span class="fw-semibold">Php ${Number(i.subtotal).toFixed(2)}</span>
+          </div>
+        `).join('');
       } else {
-        itemsContainer.innerHTML = `<div class="text-muted small py-1">No item details recorded.</div>`;
+        itemsContainer.innerHTML = `<div class="text-muted">No item details recorded.</div>`;
       }
+
       document.getElementById('modal-detail-total').textContent = `Php ${Number(order.order_total).toFixed(2)}`;
 
-      // Card 3: Payment
-      const payContent = document.getElementById('modal-detail-payment-content');
-      const isPaid = (order.payment_status === 'Verified');
-      if (isPaid) {
-        payContent.innerHTML = `
-          <div class="modal-info-row">
-            <span class="modal-info-label">Payment Method:</span>
-            <span class="modal-info-val">${order.payment_method || 'Cash'}</span>
-          </div>
-          <div class="modal-info-row">
-            <span class="modal-info-label">Payment Status:</span>
-            <span class="badge bg-success-subtle text-success">${order.payment_status}</span>
-          </div>
-          <div class="modal-info-row">
-            <span class="modal-info-label">Amount Paid:</span>
-            <span class="modal-info-val">Php ${Number(order.amount_paid || order.order_total).toFixed(2)}</span>
-          </div>
-          <div class="modal-info-row">
-            <span class="modal-info-label">Change:</span>
-            <span class="modal-info-val">Php ${Number(order.change_amount || 0).toFixed(2)}</span>
-          </div>
-          ${order.gcash_reference_number ? `
-          <div class="modal-info-row mt-1 pt-1 border-top">
-            <span class="modal-info-label">Reference #:</span>
-            <span class="modal-info-val">${order.gcash_reference_number}</span>
-          </div>` : ''}
-        `;
+      // Show/hide collect payment button
+      const collectBtn = document.getElementById('btn-modal-collect-pay');
+      if (order.payment_status === 'Verified' || order.order_status === 'Cancelled') {
+        collectBtn.style.display = 'none';
       } else {
-        payContent.innerHTML = `No payment recorded yet.`;
-      }
-
-      // Footer Button 1: Order Status Text
-      document.getElementById('manager-status-btn-text').textContent = `Status: ${order.order_status}`;
-
-      // Footer Button 2: Pay order button
-      const payBtn = document.getElementById('btn-manager-modal-pay');
-      if (isPaid || order.order_status === 'Cancelled') {
-        payBtn.style.display = 'none';
-      } else {
-        payBtn.style.display = 'inline-block';
+        collectBtn.style.display = 'inline-block';
       }
 
       new bootstrap.Modal(document.getElementById('transactionDetailsModal')).show();
     }
 
-    async function managerChangeOrderStatus(newStatus) {
+    async function saveManagerOrderChanges() {
       if (!activeDetailOrder) return;
 
-      const payload = { order_status: newStatus };
-      if (newStatus === 'Cancelled') {
-        payload.payment_status = 'Failed';
-      } else if (newStatus === 'Completed' && activeDetailOrder.payment_status !== 'Verified') {
-        // If manager marks completed directly, set verified
-        payload.payment_status = 'Verified';
-      }
+      const payload = {
+        cust_name: document.getElementById('edit-cust-name').value.trim(),
+        contact_number: document.getElementById('edit-contact-no').value.trim(),
+        order_type: document.getElementById('edit-order-type').value,
+        order_status: document.getElementById('edit-order-status').value,
+        payment_status: document.getElementById('edit-payment-status').value,
+        notes: document.getElementById('edit-notes').value.trim()
+      };
 
       try {
-        const res = await fetch(`/api/orders/${activeDetailOrder.order_id}/status`, {
+        const res = await fetch(`/api/orders/${activeDetailOrder.order_id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (data.success) {
+          alert('Order updated successfully!');
           bootstrap.Modal.getInstance(document.getElementById('transactionDetailsModal')).hide();
           fetchTransactions();
         } else {
-          alert('Error updating status: ' + data.error);
+          alert('Error updating order: ' + data.error);
         }
       } catch (err) {
-        alert('Server communication error: ' + err.message);
-      }
-    }
-
-    async function promptEditManagerCustomer() {
-      if (!activeDetailOrder) return;
-      const currentName = activeDetailOrder.cust_name || 'Walk-in';
-      const newName = prompt('Enter updated customer name:', currentName);
-      if (newName === null || newName.trim() === '' || newName === currentName) return;
-
-      try {
-        const res = await fetch(`/api/orders/${activeDetailOrder.order_id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cust_name: newName.trim() })
-        });
-        const data = await res.json();
-        if (data.success) {
-          activeDetailOrder.cust_name = newName.trim();
-          document.getElementById('modal-cust-text').textContent = newName.trim();
-          fetchTransactions();
-        } else {
-          alert('Failed to update customer name: ' + data.error);
-        }
-      } catch (err) {
-        alert('Error: ' + err.message);
+        alert('Failed to connect to server: ' + err.message);
       }
     }
 
