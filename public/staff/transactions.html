@@ -16,6 +16,33 @@
       max-width: 1220px;
       margin-left: 0;
     }
+    .modal-info-card {
+      background: #ffffff;
+      border: 1px solid #eef2ef;
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .modal-info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+    .modal-info-row:last-child {
+      margin-bottom: 0;
+    }
+    .modal-info-label {
+      color: #7b8b7d;
+      font-weight: 500;
+    }
+    .modal-info-val {
+      color: #111111;
+      font-weight: 700;
+      text-align: right;
+    }
     .badge-status {
       padding: 4px 10px;
       border-radius: 20px;
@@ -118,102 +145,98 @@
     </div>
   </main>
 
-  <!-- STAFF TRANSACTION DETAILS MODAL -->
+  <!-- STAFF TRANSACTION DETAILS MODAL (3-CARD DESIGN MATCHING UI) -->
   <div class="modal fade" id="staffDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
-      <div class="modal-content border-0 p-3 shadow-lg">
-        <div class="modal-header border-0 pb-1">
-          <h5 class="modal-title fw-bold text-dark">Order Details</h5>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+      <div class="modal-content border-0 p-3 shadow-lg" style="border-radius: 24px;">
+        
+        <!-- Header -->
+        <div class="modal-header border-0 pb-1 align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <h5 class="modal-title fw-bold text-dark mb-0 fs-5">Order Details</h5>
+            <span id="s-modal-badge" class="badge rounded-pill px-3 py-1" style="background: #fff8e6; color: #b7791f; font-weight: 600; font-size: 0.8rem;">For payment</span>
+          </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+
         <div class="modal-body py-2">
           
-          <!-- Order Metadata -->
-          <div class="p-3 bg-light rounded-3 border mb-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted small">Order No:</span>
-              <span class="fw-bold text-dark" id="s-modal-order-id">#0000</span>
+          <!-- Card 1: Order Metadata -->
+          <div class="modal-info-card">
+            <div class="modal-info-row">
+              <span class="modal-info-label">Order No.</span>
+              <span class="modal-info-val" id="s-modal-order-id">0005</span>
             </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted small">Order Type:</span>
-              <span class="fw-semibold text-dark" id="s-modal-type">Dine-In</span>
+            <div class="modal-info-row">
+              <span class="modal-info-label">Branch</span>
+              <span class="modal-info-val" id="s-modal-branch">Balagtas</span>
             </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted small">Customer Name:</span>
-              <span class="fw-semibold text-dark" id="s-modal-cust">Walk-in</span>
+            <div class="modal-info-row">
+              <span class="modal-info-label">Order type</span>
+              <span class="modal-info-val" id="s-modal-type">Take-out</span>
             </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted small">Contact No:</span>
-              <span class="fw-semibold text-dark" id="s-modal-contact">-</span>
+            <div class="modal-info-row">
+              <span class="modal-info-label">Customer</span>
+              <span class="modal-info-val" id="s-modal-cust">Walk-in</span>
             </div>
-            <div class="d-flex justify-content-between">
-              <span class="text-muted small">Order Time:</span>
-              <span class="fw-semibold text-dark" id="s-modal-time">-</span>
+            <div class="modal-info-row">
+              <span class="modal-info-label">Created</span>
+              <span class="modal-info-val" id="s-modal-created">2026-10-23 07:25:53</span>
             </div>
-          </div>
-
-          <!-- Order Items -->
-          <div class="p-3 bg-light rounded-3 border mb-3">
-            <div class="fw-bold text-dark small text-uppercase mb-2">Order Items</div>
-            <div id="s-modal-items-list" class="small"></div>
-            <div class="d-flex justify-content-between fw-bold border-top pt-2 mt-2">
-              <span>Total Amount:</span>
-              <span class="text-success fs-6" id="s-modal-total">Php 0.00</span>
+            <div class="modal-info-row">
+              <span class="modal-info-label">Taken by</span>
+              <span class="modal-info-val" id="s-modal-taken-by">Maria Santos</span>
             </div>
           </div>
 
-          <!-- Statuses Display -->
-          <div class="p-3 bg-light rounded-3 border mb-3">
-            <div class="fw-bold text-dark small text-uppercase mb-2">Statuses</div>
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="small text-muted">Order Status:</span>
-              <span id="s-modal-order-status-badge">-</span>
+          <!-- Card 2: Order Summary -->
+          <div class="modal-info-card">
+            <div class="fw-bold text-dark mb-2" style="font-size: 0.95rem;">Order Summary</div>
+            <div id="s-modal-items-list">
+              <!-- Item list injected by JS -->
             </div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="small text-muted">Payment Status:</span>
-              <span id="s-modal-pay-status-badge">-</span>
-            </div>
-            <div class="d-flex justify-content-between align-items-center small">
-              <span class="text-muted">Payment Method:</span>
-              <span class="fw-semibold text-dark" id="s-modal-pay-method">Cash</span>
+            <hr class="my-2" style="border-color: #eef2ef;">
+            <div class="d-flex justify-content-between align-items-center fw-bold" style="font-size: 1rem;">
+              <span class="text-dark">Total Amount</span>
+              <span class="text-dark" id="s-modal-total">Php 35.00</span>
             </div>
           </div>
 
-          <!-- Staff Action Controls Section -->
-          <div class="p-3 border rounded-3 bg-white mb-2" id="staff-action-container">
-            <div class="fw-bold text-dark small text-uppercase mb-2 text-success">
-              <i class="bi bi-gear me-1"></i> Order Actions
-            </div>
-            
-            <div id="staff-active-controls" class="d-flex flex-wrap gap-2 align-items-center">
-              <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-mark-prep" onclick="staffChangeStatus('Preparing')">
-                <i class="bi bi-egg-fried me-1"></i> Mark as Preparing
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3" id="btn-mark-pend" onclick="staffChangeStatus('Pending')">
-                <i class="bi bi-hourglass-split me-1"></i> Revert to Pending
-              </button>
-              <button type="button" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold" id="btn-staff-pay" style="background-color: var(--primary-green);" onclick="openStaffPaymentModal()">
-                <i class="bi bi-cash-stack me-1"></i> Collect Payment
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" id="btn-staff-cancel" onclick="staffCancelOrder()">
-                <i class="bi bi-x-circle me-1"></i> Cancel Order
-              </button>
-            </div>
-
-            <!-- Read Only Notice for Completed/Cancelled orders -->
-            <div id="staff-readonly-notice" style="display: none;">
-              <div class="alert alert-secondary py-2 small mb-0" id="staff-readonly-msg">
-                <i class="bi bi-lock me-1"></i> Order is finalized and read-only for staff.
-              </div>
+          <!-- Card 3: Payment -->
+          <div class="modal-info-card mb-2">
+            <div class="fw-bold text-dark mb-2" style="font-size: 0.95rem;">Payment</div>
+            <div id="s-modal-payment-content" class="text-muted" style="font-size: 0.9rem;">
+              No payment recorded yet.
             </div>
           </div>
 
         </div>
-        <div class="modal-footer border-0 pt-1 d-flex justify-content-between">
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" style="background-color: var(--primary-green);" onclick="viewReceiptFromStaffModal()">
-            <i class="bi bi-receipt me-1"></i> View / Print Receipt
-          </button>
+
+        <!-- Modal Footer: 3 Clean Action Buttons -->
+        <div class="modal-footer border-0 pt-1 pb-1 px-1 d-flex justify-content-between align-items-center">
+          
+          <!-- Button 1: Order Status Dropdown / Button -->
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary rounded-pill px-3 dropdown-toggle fw-semibold" type="button" id="staffStatusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.88rem;">
+              <span id="staff-status-btn-text">Status: Pending</span>
+            </button>
+            <ul class="dropdown-menu shadow-sm" id="staff-status-dropdown-menu">
+              <!-- Populated by JS based on current status -->
+            </ul>
+          </div>
+
+          <div class="d-flex gap-2 align-items-center">
+            <!-- Button 2: Collect payment (Pay order) -->
+            <button type="button" class="btn btn-success rounded-pill px-3 px-sm-4 fw-semibold" id="btn-staff-modal-pay" style="background-color: #1e5631; border-color: #1e5631; font-size: 0.9rem;" onclick="openStaffPaymentModal()">
+              Collect payment
+            </button>
+
+            <!-- Button 3: Close / Ok -->
+            <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" style="background-color: #4361ee; border-color: #4361ee; font-size: 0.9rem;" data-bs-dismiss="modal">
+              Ok
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -576,76 +599,121 @@
 
       currentStaffDetailOrder = order;
 
-      document.getElementById('s-modal-order-id').textContent = `#${String(order.order_id).padStart(4, '0')}`;
-      document.getElementById('s-modal-type').textContent = order.order_type || 'Dine-In';
-      document.getElementById('s-modal-cust').textContent = order.cust_name || 'Walk-in';
-      document.getElementById('s-modal-contact').textContent = order.contact_number || '-';
-      document.getElementById('s-modal-time').textContent = new Date(order.order_datetime).toLocaleString();
-
-      const itemsList = document.getElementById('s-modal-items-list');
-      if (order.items && order.items.length) {
-        itemsList.innerHTML = order.items.map(i => `
-          <div class="d-flex justify-content-between py-1 border-bottom">
-            <div>
-              <span class="fw-semibold text-dark">${i.quantity}x ${i.item_name}</span>
-              ${i.addons && i.addons.length ? `<div class="text-muted" style="font-size: 0.75rem;">+ ${i.addons.map(a => a.addon_name).join(', ')}</div>` : ''}
-            </div>
-            <span class="fw-semibold">Php ${Number(i.subtotal).toFixed(2)}</span>
-          </div>
-        `).join('');
+      // Header Badge matching design: "For payment" / "Completed" / "Preparing" / "Cancelled"
+      const badgeEl = document.getElementById('s-modal-badge');
+      if (order.order_status === 'Completed') {
+        badgeEl.style.background = '#e6f6ec';
+        badgeEl.style.color = '#1e5631';
+        badgeEl.textContent = 'Completed';
+      } else if (order.order_status === 'Preparing') {
+        badgeEl.style.background = '#e8f0fe';
+        badgeEl.style.color = '#1a73e8';
+        badgeEl.textContent = 'Preparing';
+      } else if (order.order_status === 'Cancelled') {
+        badgeEl.style.background = '#fde8e8';
+        badgeEl.style.color = '#c53030';
+        badgeEl.textContent = 'Cancelled';
       } else {
-        itemsList.innerHTML = `<div class="text-muted">No items recorded.</div>`;
+        badgeEl.style.background = '#fff8e6';
+        badgeEl.style.color = '#b7791f';
+        badgeEl.textContent = 'For payment';
       }
 
-      document.getElementById('s-modal-total').textContent = `Php ${Number(order.order_total).toFixed(2)}`;
-      document.getElementById('s-modal-pay-method').textContent = order.payment_method || 'Unpaid';
+      // Card 1: Metadata
+      document.getElementById('s-modal-order-id').textContent = String(order.order_id).padStart(4, '0');
+      document.getElementById('s-modal-branch').textContent = order.branch_name || 'Balagtas';
+      document.getElementById('s-modal-type').textContent = order.order_type || 'Take-out';
+      document.getElementById('s-modal-cust').textContent = order.cust_name || 'Walk-in';
+      document.getElementById('s-modal-created').textContent = order.order_datetime 
+        ? new Date(order.order_datetime).toISOString().replace('T', ' ').slice(0, 19)
+        : '-';
+      
+      const user = window.getCurrentUser ? window.getCurrentUser() : { name: 'Maria Santos' };
+      document.getElementById('s-modal-taken-by').textContent = user.name || 'Maria Santos';
 
-      // Status badges
-      const isCompleted = (order.order_status === 'Completed');
-      const isCancelled = (order.order_status === 'Cancelled');
-
-      let orderBadge = '<span class="badge-status badge-pending">Pending</span>';
-      if (order.order_status === 'Preparing') orderBadge = '<span class="badge-status badge-preparing">Preparing</span>';
-      if (isCompleted) orderBadge = '<span class="badge-status badge-completed">Completed</span>';
-      if (isCancelled) orderBadge = '<span class="badge-status badge-cancelled">Cancelled</span>';
-      document.getElementById('s-modal-order-status-badge').innerHTML = orderBadge;
-
-      const payStatus = order.payment_status || 'Pending';
-      let payBadge = '<span class="badge-status badge-pay-pending">Pending</span>';
-      if (payStatus === 'Verified') payBadge = '<span class="badge-status badge-pay-verified">Verified</span>';
-      if (payStatus === 'Failed') payBadge = '<span class="badge-status badge-pay-failed">Failed</span>';
-      if (payStatus === 'Refunded') payBadge = '<span class="badge-status badge-pay-refunded">Refunded</span>';
-      document.getElementById('s-modal-pay-status-badge').innerHTML = payBadge;
-
-      // Staff Control Permissions:
-      // If Completed or Cancelled -> Read-Only! Staff cannot alter finalized orders
-      const controls = document.getElementById('staff-active-controls');
-      const readonlyNotice = document.getElementById('staff-readonly-notice');
-      const readonlyMsg = document.getElementById('staff-readonly-msg');
-
-      if (isCompleted) {
-        controls.style.display = 'none';
-        readonlyNotice.style.display = 'block';
-        readonlyMsg.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> Order Completed & Verified (Read-only for staff).`;
-      } else if (isCancelled) {
-        controls.style.display = 'none';
-        readonlyNotice.style.display = 'block';
-        readonlyMsg.innerHTML = `<i class="bi bi-x-circle-fill text-danger me-1"></i> Order Cancelled (Read-only for staff).`;
+      // Card 2: Order Summary
+      const itemsList = document.getElementById('s-modal-items-list');
+      if (order.items && order.items.length) {
+        itemsList.innerHTML = order.items.map(i => {
+          let addonsText = '';
+          if (i.addons && i.addons.length) {
+            addonsText = i.addons.map(a => a.addon_name + (a.addon_price > 0 ? ` (+Php ${Number(a.addon_price).toFixed(2)})` : '')).join(' • ');
+          }
+          return `
+            <div class="d-flex justify-content-between align-items-start py-1">
+              <div>
+                <div class="text-dark fw-semibold" style="font-size: 0.92rem;">${i.quantity} × ${i.item_name}</div>
+                ${addonsText ? `<div class="text-muted small" style="font-size: 0.8rem;">${addonsText}</div>` : ''}
+              </div>
+              <div class="text-dark fw-semibold" style="font-size: 0.92rem;">Php ${Number(i.subtotal).toFixed(2)}</div>
+            </div>
+          `;
+        }).join('');
       } else {
-        controls.style.display = 'flex';
-        readonlyNotice.style.display = 'none';
+        itemsList.innerHTML = `<div class="text-muted small py-1">No items recorded.</div>`;
+      }
+      document.getElementById('s-modal-total').textContent = `Php ${Number(order.order_total).toFixed(2)}`;
 
-        // Toggle buttons based on current state
-        const btnPrep = document.getElementById('btn-mark-prep');
-        const btnPend = document.getElementById('btn-mark-pend');
+      // Card 3: Payment
+      const payContent = document.getElementById('s-modal-payment-content');
+      const isPaid = (order.payment_status === 'Verified');
+      if (isPaid) {
+        payContent.innerHTML = `
+          <div class="modal-info-row">
+            <span class="modal-info-label">Payment Method:</span>
+            <span class="modal-info-val">${order.payment_method || 'Cash'}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Payment Status:</span>
+            <span class="badge bg-success-subtle text-success">${order.payment_status}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Amount Paid:</span>
+            <span class="modal-info-val">Php ${Number(order.amount_paid || order.order_total).toFixed(2)}</span>
+          </div>
+          <div class="modal-info-row">
+            <span class="modal-info-label">Change:</span>
+            <span class="modal-info-val">Php ${Number(order.change_amount || 0).toFixed(2)}</span>
+          </div>
+          ${order.gcash_reference_number ? `
+          <div class="modal-info-row mt-1 pt-1 border-top">
+            <span class="modal-info-label">Reference #:</span>
+            <span class="modal-info-val">${order.gcash_reference_number}</span>
+          </div>` : ''}
+        `;
+      } else {
+        payContent.innerHTML = `No payment recorded yet.`;
+      }
 
+      // Footer Button 1: Order Status Dropdown
+      const statusBtnText = document.getElementById('staff-status-btn-text');
+      const statusDropdownMenu = document.getElementById('staff-status-dropdown-menu');
+      const statusBtn = document.getElementById('staffStatusDropdownBtn');
+
+      statusBtnText.textContent = `Status: ${order.order_status}`;
+
+      if (order.order_status === 'Completed' || order.order_status === 'Cancelled') {
+        statusBtn.disabled = true;
+        statusDropdownMenu.innerHTML = `<li><span class="dropdown-item-text text-muted small">Status finalized (read-only)</span></li>`;
+      } else {
+        statusBtn.disabled = false;
+        let menuItems = '';
         if (order.order_status === 'Pending') {
-          btnPrep.style.display = 'inline-block';
-          btnPend.style.display = 'none';
+          menuItems += `<li><a class="dropdown-item py-2 fw-semibold" href="javascript:void(0)" onclick="staffChangeStatus('Preparing')"><i class="bi bi-egg-fried me-2 text-primary"></i>Mark as Preparing</a></li>`;
         } else if (order.order_status === 'Preparing') {
-          btnPrep.style.display = 'none';
-          btnPend.style.display = 'inline-block';
+          menuItems += `<li><a class="dropdown-item py-2 fw-semibold" href="javascript:void(0)" onclick="staffChangeStatus('Pending')"><i class="bi bi-hourglass-split me-2 text-warning"></i>Revert to Pending</a></li>`;
         }
+        menuItems += `<li><hr class="dropdown-divider my-1"></li>`;
+        menuItems += `<li><a class="dropdown-item py-2 text-danger fw-semibold" href="javascript:void(0)" onclick="staffCancelOrder()"><i class="bi bi-x-circle me-2"></i>Cancel Order</a></li>`;
+        statusDropdownMenu.innerHTML = menuItems;
+      }
+
+      // Footer Button 2: Collect payment button
+      const payBtn = document.getElementById('btn-staff-modal-pay');
+      if (isPaid || order.order_status === 'Cancelled') {
+        payBtn.style.display = 'none';
+      } else {
+        payBtn.style.display = 'inline-block';
       }
 
       new bootstrap.Modal(document.getElementById('staffDetailsModal')).show();
