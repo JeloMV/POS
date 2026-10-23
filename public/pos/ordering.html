@@ -900,19 +900,36 @@
       btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Saving...`;
 
       try {
-        const res = await fetch('/api/orders', {
-          method: 'POST',
+        const isExistingOrder = Boolean(currentOrderId);
+        const endpoint = isExistingOrder
+          ? `/api/orders/${currentOrderId}`
+          : '/api/orders';
+        const method = isExistingOrder ? 'PATCH' : 'POST';
+        const requestBody = isExistingOrder
+          ? {
+              cust_name: payload.cust_name,
+              contact_number: payload.contact_number,
+              other_contact: payload.other_contact,
+              order_type: payload.order_type,
+              order_status: 'Pending'
+            }
+          : payload;
+
+        const res = await fetch(endpoint, {
+          method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(requestBody)
         });
         const data = await res.json();
         if (data.success) {
           bootstrap.Modal.getInstance(document.getElementById('saveOrderModal')).hide();
+          const savedOrderId = currentOrderId || data.order_id;
+          currentOrderId = null;
           clearCart();
           document.getElementById('cust_name').value = '';
           document.getElementById('contact_number').value = '';
           document.getElementById('other_contact').value = '';
-          showToast(`Order #${data.order_id} saved as Pending. Customer can pay at the counter.`, 'success');
+          showToast(`Order #${savedOrderId} saved as Pending. Customer can pay at the counter.`, 'success');
         } else {
           showToast('Error saving order: ' + data.error, 'danger');
         }
@@ -931,11 +948,14 @@
     async function openPaymentModal() {
       if (cart.length === 0) return;
 
+
       if (currentOrderId) {
         const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
         modal.show();
         return;
       }
+
+
       const user = window.getCurrentUser ? window.getCurrentUser() : { branch: 'Balagtas' };
 
       const payload = {
