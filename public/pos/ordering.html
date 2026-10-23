@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,28 +16,33 @@
       gap: 24px;
       align-items: start;
     }
+
     @media (max-width: 991.98px) {
       .pos-layout {
         grid-template-columns: 1fr;
       }
     }
+
     .menu-products-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       gap: 16px;
     }
+
     .product-img {
       height: 70px;
       object-fit: contain;
       margin: 0 auto 8px auto;
       display: block;
     }
+
     .order-summary-box {
       position: sticky;
       top: 80px;
     }
   </style>
 </head>
+
 <body data-page-title="Order Selection">
 
   <!-- Shared Topbar and Sidebar Container -->
@@ -44,12 +50,12 @@
 
   <!-- Main Content Area (left-aligned) -->
   <main class="main-content">
-    
+
     <div class="pos-layout">
-      
+
       <!-- LEFT SECTION: Menu Categories & Product Cards Grid -->
       <div class="menu-selection-section">
-        
+
         <!-- Category Filter Pills -->
         <div class="category-pills mb-3" id="category-pills-list">
           <button class="cat-pill active" onclick="filterCategory('All')">All Items</button>
@@ -76,8 +82,10 @@
 
         <!-- Order Type Buttons -->
         <div class="d-flex gap-2 mb-3">
-          <button type="button" class="order-type-btn flex-fill active" onclick="setOrderType(this, 'Dine-In')">Dine-in</button>
-          <button type="button" class="order-type-btn flex-fill" onclick="setOrderType(this, 'Take-Out')">Take-out</button>
+          <button type="button" class="order-type-btn flex-fill active"
+            onclick="setOrderType(this, 'Dine-In')">Dine-in</button>
+          <button type="button" class="order-type-btn flex-fill"
+            onclick="setOrderType(this, 'Take-Out')">Take-out</button>
           <button type="button" class="order-type-btn flex-fill" onclick="setOrderType(this, 'Phone')">Phone</button>
           <button type="button" class="order-type-btn flex-fill" onclick="setOrderType(this, 'Online')">Online</button>
         </div>
@@ -85,13 +93,16 @@
         <!-- Customer Inputs (Optional) -->
         <div class="row g-2 mb-3">
           <div class="col-12">
-            <input type="text" id="cust_name" class="form-control form-control-sm" placeholder="Customer name (optional)">
+            <input type="text" id="cust_name" class="form-control form-control-sm"
+              placeholder="Customer name (optional)">
           </div>
           <div class="col-sm-6">
-            <input type="text" id="contact_number" class="form-control form-control-sm" placeholder="Contact number (optional)">
+            <input type="text" id="contact_number" class="form-control form-control-sm"
+              placeholder="Contact number (optional)">
           </div>
           <div class="col-sm-6">
-            <input type="text" id="other_contact" class="form-control form-control-sm" placeholder="Other contact / notes">
+            <input type="text" id="other_contact" class="form-control form-control-sm"
+              placeholder="Other contact / notes">
           </div>
         </div>
 
@@ -113,10 +124,12 @@
 
         <!-- Order Action Buttons -->
         <div class="d-grid gap-2">
-          <button class="btn btn-success py-2 fw-semibold fs-6 shadow-sm" id="btn-charge" onclick="openPaymentModal()" style="background-color: var(--primary-green); border-color: var(--primary-green);" disabled>
+          <button class="btn btn-success py-2 fw-semibold fs-6 shadow-sm" id="btn-charge" onclick="openPaymentModal()"
+            style="background-color: var(--primary-green); border-color: var(--primary-green);" disabled>
             <i class="bi bi-credit-card me-2"></i>Charge (Pay Now)
           </button>
-          <button class="btn btn-outline-secondary py-2 fw-semibold small" id="btn-save-order" onclick="saveOrderPending()" disabled>
+          <button class="btn btn-outline-secondary py-2 fw-semibold small" id="btn-save-order"
+            onclick="saveOrderPending()" disabled>
             <i class="bi bi-save me-1"></i>Save order – pay later
           </button>
         </div>
@@ -172,8 +185,11 @@
           </div>
         </div>
         <div class="modal-footer border-0 pt-2">
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold" style="background-color: var(--primary-green); border-color: var(--primary-green);" onclick="confirmSaveOrder()">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+            data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold"
+            style="background-color: var(--primary-green); border-color: var(--primary-green);"
+            onclick="confirmSaveOrder()">
             <i class="bi bi-save me-1"></i> Confirm Save
           </button>
         </div>
@@ -193,13 +209,15 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body py-2">
-          
+
           <!-- Flavor Selection -->
           <div class="mb-3" id="flavor-group-wrapper">
             <label class="form-label small fw-bold text-dark text-uppercase mb-2">Flavor</label>
             <div class="option-pill-group">
-              <button type="button" class="option-pill active" onclick="selectOptionPill(this, 'flavor', 'Original', 0)">Original</button>
-              <button type="button" class="option-pill" onclick="selectOptionPill(this, 'flavor', 'Spicy', 0)">Spicy</button>
+              <button type="button" class="option-pill active"
+                onclick="selectOptionPill(this, 'flavor', 'Original', 0)">Original</button>
+              <button type="button" class="option-pill"
+                onclick="selectOptionPill(this, 'flavor', 'Spicy', 0)">Spicy</button>
             </div>
           </div>
 
@@ -207,8 +225,10 @@
           <div class="mb-3" id="rice-group-wrapper">
             <label class="form-label small fw-bold text-dark text-uppercase mb-2">Rice Choice</label>
             <div class="option-pill-group">
-              <button type="button" class="option-pill active" onclick="selectOptionPill(this, 'rice', 'Plain', 0)">Plain</button>
-              <button type="button" class="option-pill" onclick="selectOptionPill(this, 'rice', 'Garlic', 5)">Garlic +Php 5.00</button>
+              <button type="button" class="option-pill active"
+                onclick="selectOptionPill(this, 'rice', 'Plain', 0)">Plain</button>
+              <button type="button" class="option-pill" onclick="selectOptionPill(this, 'rice', 'Garlic', 5)">Garlic
+                +Php 5.00</button>
             </div>
           </div>
 
@@ -230,8 +250,11 @@
 
         </div>
         <div class="modal-footer border-0 pt-2">
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold flex-fill" style="background-color: var(--primary-green); border-color: var(--primary-green);" onclick="confirmAddToCart()">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+            data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold flex-fill"
+            style="background-color: var(--primary-green); border-color: var(--primary-green);"
+            onclick="confirmAddToCart()">
             Add to order
           </button>
         </div>
@@ -248,8 +271,9 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body py-2">
-          
-          <div class="d-flex justify-content-between p-3 rounded-3 mb-3" style="background: var(--primary-green-light); border: 1px solid #c8decb;">
+
+          <div class="d-flex justify-content-between p-3 rounded-3 mb-3"
+            style="background: var(--primary-green-light); border: 1px solid #c8decb;">
             <span class="text-dark fw-semibold">Total Amount Due:</span>
             <span class="fw-bold fs-4 text-success" id="pay-modal-amount-due">Php 0.00</span>
           </div>
@@ -257,10 +281,12 @@
           <!-- Payment Method Toggle -->
           <label class="form-label small fw-bold text-dark text-uppercase mb-2">Payment Method</label>
           <div class="d-flex gap-2 mb-3">
-            <button type="button" class="btn btn-outline-success flex-fill active fw-semibold" id="btn-pay-cash" onclick="setPaymentMethod('Cash')">
+            <button type="button" class="btn btn-outline-success flex-fill active fw-semibold" id="btn-pay-cash"
+              onclick="setPaymentMethod('Cash')">
               <i class="bi bi-cash-stack me-1"></i> Cash
             </button>
-            <button type="button" class="btn btn-outline-success flex-fill fw-semibold" id="btn-pay-gcash" onclick="setPaymentMethod('GCash')">
+            <button type="button" class="btn btn-outline-success flex-fill fw-semibold" id="btn-pay-gcash"
+              onclick="setPaymentMethod('GCash')">
               <i class="bi bi-wallet2 me-1"></i> GCash (PayMongo)
             </button>
           </div>
@@ -269,9 +295,10 @@
           <div id="cash-payment-section">
             <div class="mb-3">
               <label class="form-label small fw-semibold text-muted">Amount Tendered / Paid (Php)</label>
-              <input type="number" step="1" id="cash-amount-paid" class="form-control form-control-lg fw-bold" placeholder="0.00" oninput="calculateChange()">
+              <input type="number" step="1" id="cash-amount-paid" class="form-control form-control-lg fw-bold"
+                placeholder="0.00" oninput="calculateChange()">
             </div>
-            
+
             <div class="d-flex flex-wrap gap-2 mb-3">
               <button type="button" class="btn btn-sm btn-light border" onclick="quickCash('exact')">Exact</button>
               <button type="button" class="btn btn-sm btn-light border" onclick="quickCash(50)">50</button>
@@ -291,17 +318,20 @@
           <div id="gcash-payment-section" style="display: none;">
             <div class="p-3 rounded-3 bg-light border mb-3 text-center">
               <div class="badge bg-primary px-3 py-1 mb-2">PayMongo GCash Gateway</div>
-              <p class="small text-muted mb-2">Generate a verified PayMongo payment link or scan the QR code to complete payment via GCash.</p>
-              
+              <p class="small text-muted mb-2">Generate a verified PayMongo payment link or scan the QR code to complete
+                payment via GCash.</p>
+
               <div id="paymongo-link-area" class="d-grid gap-2 mb-2">
-                <button type="button" class="btn btn-primary fw-semibold" id="btn-create-paymongo" onclick="generatePayMongoLink()">
+                <button type="button" class="btn btn-primary fw-semibold" id="btn-create-paymongo"
+                  onclick="generatePayMongoLink()">
                   <i class="bi bi-link-45deg me-1"></i> Generate PayMongo Payment Link
                 </button>
               </div>
 
               <div id="paymongo-active-details" style="display: none;">
                 <div class="p-2 bg-white rounded border mb-2">
-                  <a href="#" target="_blank" id="paymongo-checkout-btn" class="btn btn-sm btn-outline-primary w-100 fw-bold">
+                  <a href="#" target="_blank" id="paymongo-checkout-btn"
+                    class="btn btn-sm btn-outline-primary w-100 fw-bold">
                     <i class="bi bi-box-arrow-up-right me-1"></i> Open PayMongo Checkout
                   </a>
                   <small class="d-block text-muted mt-1" id="paymongo-ref-text">Reference: Loading...</small>
@@ -317,14 +347,19 @@
 
             <div class="mb-3">
               <label class="form-label small fw-semibold text-muted">GCash Reference / Approval Code</label>
-              <input type="text" id="gcash-ref-number" class="form-control" placeholder="e.g. GCX-20261023-001 or PayMongo Ref">
+              <input type="text" id="gcash-ref-number" class="form-control"
+                placeholder="e.g. GCX-20261023-001 or PayMongo Ref">
             </div>
           </div>
 
         </div>
         <div class="modal-footer border-0 pt-1">
-          <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold flex-fill" id="btn-complete-payment" style="background-color: var(--primary-green); border-color: var(--primary-green);" onclick="processFinalPayment()">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-3"
+            data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success rounded-pill px-4 fw-semibold flex-fill"
+            id="btn-complete-payment"
+            style="background-color: var(--primary-green); border-color: var(--primary-green);"
+            onclick="processFinalPayment()">
             Complete Payment & Receipt
           </button>
         </div>
@@ -338,10 +373,11 @@
       <div class="modal-content border-0 p-3 shadow-lg">
         <div class="modal-header border-0 pb-0 no-print">
           <h6 class="modal-title fw-bold text-dark">Transaction Receipt</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="resetAfterReceipt()"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
+            onclick="resetAfterReceipt()"></button>
         </div>
         <div class="modal-body py-2">
-          
+
           <div class="receipt-paper" id="printableReceipt">
             <div class="text-center mb-2">
               <img src="/assets/img/logo.png" alt="Logo" style="height: 48px; max-width: 160px; object-fit: contain;">
@@ -422,7 +458,9 @@
           <button type="button" class="btn btn-outline-secondary rounded-pill" onclick="window.print()">
             <i class="bi bi-printer me-1"></i> Print Receipt
           </button>
-          <button type="button" class="btn btn-success rounded-pill flex-fill" style="background-color: var(--primary-green); border-color: var(--primary-green);" onclick="resetAfterReceipt()">
+          <button type="button" class="btn btn-success rounded-pill flex-fill"
+            style="background-color: var(--primary-green); border-color: var(--primary-green);"
+            onclick="resetAfterReceipt()">
             <i class="bi bi-plus-circle me-1"></i> New Order
           </button>
         </div>
@@ -608,11 +646,11 @@
           `;
         }
 
-        const clickHandler = isUnavailable 
-          ? '' 
-          : (isCustomizable 
-              ? `openCustomizeModal(${p.product_id})` 
-              : (inCartQty === 0 ? `quickAddDirectItem(${p.product_id})` : ''));
+        const clickHandler = isUnavailable
+          ? ''
+          : (isCustomizable
+            ? `openCustomizeModal(${p.product_id})`
+            : (inCartQty === 0 ? `quickAddDirectItem(${p.product_id})` : ''));
 
         return `
           <div class="product-card ${isUnavailable ? 'is-unavailable' : ''} ${hasItemsClass}" ${clickHandler ? `onclick="${clickHandler}"` : ''}>
@@ -763,8 +801,8 @@
       let grandTotal = 0;
       container.innerHTML = cart.map((item, idx) => {
         grandTotal += item.subtotal;
-        const addonsText = item.addons && item.addons.length > 0 
-          ? `<div class="text-muted small" style="font-size: 0.8rem;">${item.addons.map(a => a.addon_name + (a.addon_price > 0 ? ` (+${a.addon_price})` : '')).join(', ')}</div>` 
+        const addonsText = item.addons && item.addons.length > 0
+          ? `<div class="text-muted small" style="font-size: 0.8rem;">${item.addons.map(a => a.addon_name + (a.addon_price > 0 ? ` (+${a.addon_price})` : '')).join(', ')}</div>`
           : '';
 
         return `
@@ -892,6 +930,12 @@
 
     async function openPaymentModal() {
       if (cart.length === 0) return;
+
+      if (currentOrderId) {
+        const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+        modal.show();
+        return;
+      }
       const user = window.getCurrentUser ? window.getCurrentUser() : { branch: 'Balagtas' };
 
       const payload = {
@@ -1160,4 +1204,5 @@
     });
   </script>
 </body>
+
 </html>
