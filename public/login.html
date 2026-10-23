@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Chick N Pastil POS</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/shared/style.css">
+  <style>
+    body {
+      background-color: #f2f6f3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 440px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(30, 86, 49, 0.08);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      padding: 36px 32px;
+    }
+    .auth-logo {
+      max-width: 220px;
+      height: auto;
+      display: block;
+      margin: 0 auto 24px auto;
+    }
+    .branch-btn {
+      width: 100%;
+      padding: 10px 16px;
+      border-radius: 25px;
+      border: 1.5px solid var(--border-color);
+      background: #ffffff;
+      color: var(--text-dark);
+      font-weight: 500;
+      margin-bottom: 8px;
+      transition: all 0.15s ease;
+      text-align: center;
+      cursor: pointer;
+    }
+    .branch-btn:hover, .branch-btn.selected {
+      border-color: var(--primary-green);
+      background: var(--primary-green-light);
+      color: var(--primary-green);
+      font-weight: 600;
+    }
+    .step-box {
+      display: none;
+    }
+    .step-box.active {
+      display: block;
+    }
+    .quick-role-chip {
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: #eef5f0;
+      color: #1e5631;
+      border: 1px solid #c9decb;
+    }
+    .quick-role-chip:hover {
+      background: #1e5631;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-card">
+  <div class="text-center">
+    <img src="/assets/img/logo.png" alt="Chick N Pastil Logo" class="auth-logo">
+  </div>
+
+  <!-- Step 1: Login Form -->
+  <div id="step-1" class="step-box active">
+    <h5 class="text-center fw-bold text-dark mb-3">POS Staff & Manager Login</h5>
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted">Email</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-envelope text-muted"></i></span>
+          <input type="email" id="email" class="form-control border-start-0" placeholder="user@chickpastil.ph" value="manager@chickpastil.ph" required>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted">Password</label>
+        <div class="input-group">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+          <input type="password" id="password" class="form-control border-start-0" value="admin123" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-success w-100 py-2 fw-semibold mb-3" style="background-color: var(--primary-green); border-color: var(--primary-green);">
+        Login
+      </button>
+
+      <!-- Quick Roles For Fast Testing -->
+      <div class="border-top pt-3 text-center">
+        <small class="text-muted d-block mb-2">Quick Testing Credentials:</small>
+        <div class="d-flex justify-content-center gap-2">
+          <span class="quick-role-chip" onclick="quickFill('manager@chickpastil.ph', 'Manager')">
+            <i class="bi bi-person-badge me-1"></i>Manager
+          </span>
+          <span class="quick-role-chip" onclick="quickFill('staff@chickpastil.ph', 'Staff')">
+            <i class="bi bi-person me-1"></i>Staff
+          </span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Step 2: Verification Code -->
+  <div id="step-2" class="step-box">
+    <div class="text-center mb-3">
+      <div class="rounded-circle d-inline-flex p-3 mb-2" style="background: var(--primary-green-light); color: var(--primary-green);">
+        <i class="bi bi-shield-check fs-2"></i>
+      </div>
+      <h5 class="fw-bold text-dark">Security Verification</h5>
+      <p class="text-muted small">A verification code has been sent to your registered email!</p>
+    </div>
+    <form id="verify-form" onsubmit="handleVerify(event)">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold text-muted text-center d-block">Verification Code</label>
+        <input type="text" id="verify-code" class="form-control text-center fs-4 fw-bold letter-spacing-2" maxlength="6" value="123456" required>
+      </div>
+      <button type="submit" class="btn btn-success w-100 py-2 fw-semibold mb-2" style="background-color: var(--primary-green);">
+        Submit Code
+      </button>
+      <button type="button" class="btn btn-link w-100 text-muted small" onclick="goToStep(1)">Back</button>
+    </form>
+  </div>
+
+  <!-- Step 3: Branch Selection -->
+  <div id="step-3" class="step-box">
+    <div class="text-center mb-3">
+      <h5 class="fw-bold text-dark">Select Your Current Branch</h5>
+      <p class="text-muted small">Choose active store location for order processing and inventory sync</p>
+    </div>
+
+    <div id="branch-list">
+      <div class="branch-btn selected" onclick="selectBranch(this, 'Balagtas')">Balagtas</div>
+      <div class="branch-btn" onclick="selectBranch(this, 'Borol')">Borol</div>
+      <div class="branch-btn" onclick="selectBranch(this, 'Pulong Gubat')">Pulong Gubat</div>
+      <div class="branch-btn" onclick="selectBranch(this, 'Santol')">Santol</div>
+      <div class="branch-btn" onclick="selectBranch(this, 'Northville 6')">Northville 6</div>
+      <div class="branch-btn" onclick="selectBranch(this, 'Pandi')">Pandi</div>
+      <div class="branch-btn" onclick="selectBranch(this, 'Bulihan Centro')">Bulihan Centro</div>
+    </div>
+
+    <button type="button" class="btn btn-success w-100 py-2 fw-semibold mt-3" style="background-color: var(--primary-green);" onclick="finishLogin()">
+      Enter POS System
+    </button>
+  </div>
+</div>
+
+<script>
+  let selectedRole = 'Manager';
+  let selectedBranch = 'Balagtas';
+  let selectedEmail = 'manager@chickpastil.ph';
+
+  function quickFill(email, role) {
+    document.getElementById('email').value = email;
+    selectedRole = role;
+    selectedEmail = email;
+  }
+
+  function goToStep(step) {
+    document.querySelectorAll('.step-box').forEach(el => el.classList.remove('active'));
+    document.getElementById(`step-${step}`).classList.add('active');
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    selectedEmail = document.getElementById('email').value;
+    if (selectedEmail.includes('staff')) {
+      selectedRole = 'Staff';
+    } else {
+      selectedRole = 'Manager';
+    }
+    goToStep(2);
+  }
+
+  function handleVerify(e) {
+    e.preventDefault();
+    goToStep(3);
+  }
+
+  function selectBranch(btn, branch) {
+    document.querySelectorAll('.branch-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedBranch = branch;
+  }
+
+  function finishLogin() {
+    const user = {
+      name: selectedRole === 'Manager' ? 'Francis Pablo' : 'Maria Santos',
+      role: selectedRole,
+      branch: selectedBranch,
+      email: selectedEmail
+    };
+    localStorage.setItem('chick_user', JSON.stringify(user));
+
+    if (selectedRole === 'Staff') {
+      window.location.href = '/staff/dashboard.html';
+    } else {
+      window.location.href = '/manager/dashboard.html';
+    }
+  }
+</script>
+</body>
+</html>
