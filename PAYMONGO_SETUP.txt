@@ -1,0 +1,111 @@
+================================================================================
+           CHICK N PASTIL POS - PAYMONGO PAYMENT GATEWAY SETUP GUIDE
+================================================================================
+
+This document explains how to set up, configure, test, and troubleshoot the 
+PayMongo integration (GCash, Maya, Cards, and E-wallets) used in the Chick N 
+Pastil POS System.
+
+--------------------------------------------------------------------------------
+1. OVERVIEW & HOW PAYMONGO WORKS IN THIS POS
+--------------------------------------------------------------------------------
+The POS uses the PayMongo Links API (v1/links).
+When staff or manager selects "GCash (PayMongo)" during payment:
+  1. The POS calls POST /api/paymongo/create-link with the Order ID & Amount.
+  2. The server requests a unique checkout link from PayMongo.
+  3. A checkout URL is generated (e.g., https://pm.link/org/test/...).
+  4. The customer scans the QR / opens the checkout URL on their phone and pays.
+  5. The cashier clicks "Check Status" to verify payment in real-time.
+  6. Upon verification, the payment is recorded in MySQL (payments table) and
+     marked as Verified with reference numbers, and the receipt is issued.
+
+--------------------------------------------------------------------------------
+2. ENVIRONMENT VARIABLES CONFIGURATION (.env)
+--------------------------------------------------------------------------------
+Ensure your `.env` file located in the root of the POS folder contains:
+
+  # PayMongo API Credentials
+  PAYMONGO_SECRET_KEY=sk_test_HJRm8RWfqSchuBu4T9m5pRHz
+  PAYMONGO_WEBHOOK_SECRET=whsk_w6oyrCf4UTKaRE6LKJKJKVRs
+
+Notes on Keys:
+- Test Secret Key starts with: `sk_test_...`
+- Test Public Key starts with: `pk_test_...`
+- Production Live Secret Key starts with: `sk_live_...`
+- Production Live Public Key starts with: `pk_live_...`
+
+> IMPORTANT: In backend Node.js (`server/paymongo.js`), the secret key is used
+> with Basic Authentication (`Basic base64(PAYMONGO_SECRET_KEY + ':')`).
+
+--------------------------------------------------------------------------------
+3. HOW TO GET YOUR PAYMONGO API KEYS
+--------------------------------------------------------------------------------
+1. Sign up or log in at: https://dashboard.paymongo.com/
+2. Toggle between "Test Mode" and "Live Mode" in the top dashboard bar.
+3. In the left navigation menu, click "Developers" -> "API Keys".
+4. Copy your Secret Key (`sk_test_...` or `sk_live_...`).
+5. Paste it into your `.env` file under `PAYMONGO_SECRET_KEY`.
+6. Restart the Node.js server to apply any changes.
+
+--------------------------------------------------------------------------------
+4. TESTING GCASH PAYMENTS IN TEST MODE
+--------------------------------------------------------------------------------
+PayMongo provides built-in simulator numbers for testing:
+  - Phone Number: 09171234567 or any Philippine mobile number format
+  - OTP Code: 123456 (or any 6 digits in test environment)
+  - Minimum transaction amount: Php 20.00 (PayMongo requirement)
+
+Testing Steps:
+  1. Open Staff POS or Manager Transaction page.
+  2. Click "Pay Order" or "Collect Payment" on any Pending order.
+  3. Select "GCash (PayMongo)".
+  4. Click "Generate PayMongo Link".
+  5. Click "Open PayMongo Checkout".
+  6. Choose GCash and complete the simulated payment.
+  7. Return to the POS window and click "Check Status".
+  8. The status will update to "Payment Verified / Paid" automatically.
+
+--------------------------------------------------------------------------------
+5. WEBHOOK CONFIGURATION (OPTIONAL FOR AUTOMATIC CALLBACKS)
+--------------------------------------------------------------------------------
+If you want PayMongo to notify your server immediately when an order is paid:
+1. PayMongo requires a publicly accessible HTTPS URL.
+   For local development, use a tunnel like ngrok:
+     npx ngrok http 3000
+   This will give you a forwarding URL like: https://xxxx-xx.ngrok-free.app
+
+2. In PayMongo Dashboard -> Developers -> Webhooks:
+   - Click "Register Webhook"
+   - URL: https://<your-domain-or-ngrok>/api/paymongo/webhook
+   - Select Events: `link.payment.paid`
+
+3. Copy the Webhook Signing Secret (`whsk_...`) into your `.env`:
+   PAYMONGO_WEBHOOK_SECRET=whsk_...
+
+--------------------------------------------------------------------------------
+6. API ENDPOINTS IN THIS SYSTEM
+--------------------------------------------------------------------------------
+- POST /api/paymongo/create-link
+  Request Body: { "order_id": 12, "amount": 150.00, "branch_name": "Balagtas" }
+  Response: { "success": true, "checkoutUrl": "...", "linkId": "link_..." }
+
+- GET /api/paymongo/check-status/:linkId
+  Response: { "success": true, "isPaid": true/false, "status": "paid", ... }
+
+- POST /api/paymongo/webhook
+  Listens for incoming PayMongo webhook notifications.
+
+--------------------------------------------------------------------------------
+7. COMMON ISSUES & TROUBLESHOOTING
+--------------------------------------------------------------------------------
+- Error: "Unauthorized" or 401
+  -> Check that PAYMONGO_SECRET_KEY is valid and has no trailing spaces.
+  -> Verify that the server was restarted after editing .env.
+
+- Error: "Amount must be at least 2000" (Php 20.00)
+  -> PayMongo Links API requires a minimum amount of 20.00 PHP (2000 cents).
+
+- GCash Reference Number is empty:
+  -> In manual mode, staff can type the customer's GCash reference number.
+  -> In PayMongo mode, the link ID / reference number is auto-filled.
+================================================================================
