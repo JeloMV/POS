@@ -482,6 +482,80 @@
       renderProducts();
     }
 
+    function findProduct(productId) {
+      for (const s of menuData.sections) {
+        const found = s.products.find(p => p.product_id === productId);
+        if (found) {
+          return { ...found, section_name: s.section_name };
+        }
+      }
+      return null;
+    }
+
+    // No popup for item order except frm pastil size
+    function isCustomizableProduct(p) {
+      const secName = (p.section_name || '').toLowerCase();
+      return secName.includes('pastil');
+    }
+
+
+    // increment if same item prodcut details in order summary
+    function getAddonsSignature(addons) {
+      if (!addons || addons.length === 0) return '';
+      return addons
+        .map(a => `${(a.addon_name || '').trim()}@${Number(a.addon_price || 0).toFixed(2)}x${a.quantity || 1}`)
+        .sort()
+        .join(';;');
+    }
+
+    function findCartItemIndex(productId, addons = []) {
+      const targetSig = getAddonsSignature(addons);
+      return cart.findIndex(item => item.product_id === productId && getAddonsSignature(item.addons) === targetSig);
+    }
+
+    function getDirectItemCartQty(productId) {
+      const idx = findCartItemIndex(productId, []);
+      return idx !== -1 ? cart[idx].quantity : 0;
+    }
+
+    function quickAddDirectItem(productId) {
+      const product = findProduct(productId);
+      if (!product || !product.is_available) return;
+
+      const idx = findCartItemIndex(productId, []);
+      if (idx !== -1) {
+        cart[idx].quantity += 1;
+        cart[idx].subtotal = cart[idx].unit_price * cart[idx].quantity;
+      } else {
+        cart.push({
+          product_id: product.product_id,
+          item_name: product.product_name,
+          unit_price: Number(product.price),
+          quantity: 1,
+          addons: [],
+          subtotal: Number(product.price)
+        });
+      }
+      renderCart();
+    }
+
+    function quickAdjustDirectItem(productId, change) {
+      const idx = findCartItemIndex(productId, []);
+      if (idx === -1) {
+        if (change > 0) quickAddDirectItem(productId);
+        return;
+      }
+
+      const newQty = cart[idx].quantity + change;
+      if (newQty <= 0) {
+        cart.splice(idx, 1);
+      } else {
+        cart[idx].quantity = newQty;
+        cart[idx].subtotal = cart[idx].unit_price * newQty;
+      }
+      renderCart();
+    }
+
     function renderProducts() {
       const container = document.getElementById('products-grid-container');
       let productsToDisplay = [];
@@ -501,8 +575,47 @@
 
       container.innerHTML = productsToDisplay.map(p => {
         const isUnavailable = !p.is_available;
+        const isCustomizable = isCustomizableProduct(p);
+        const inCartQty = !isCustomizable ? getDirectItemCartQty(p.product_id) : 0;
+        const hasItemsClass = inCartQty > 0 ? 'has-items' : '';
+
+        let actionHtml = '';
+        if (isUnavailable) {
+          actionHtml = `<span class="text-muted small"><i class="bi bi-slash-circle"></i></span>`;
+        } else if (isCustomizable) {
+          actionHtml = `
+            <div class="product-add-circle" title="Customize & Add">
+              <i class="bi bi-plus"></i>
+            </div>
+          `;
+        } else if (inCartQty > 0) {
+          actionHtml = `
+            <div class="card-qty-stepper" onclick="event.stopPropagation()">
+              <button type="button" class="card-qty-btn" onclick="quickAdjustDirectItem(${p.product_id}, -1)" title="Decrease">
+                <i class="bi bi-dash"></i>
+              </button>
+              <span class="card-qty-count">${inCartQty}</span>
+              <button type="button" class="card-qty-btn" onclick="quickAdjustDirectItem(${p.product_id}, 1)" title="Increase">
+                <i class="bi bi-plus"></i>
+              </button>
+            </div>
+          `;
+        } else {
+          actionHtml = `
+            <div class="product-add-circle" onclick="event.stopPropagation(); quickAddDirectItem(${p.product_id})" title="Add item">
+              <i class="bi bi-plus"></i>
+            </div>
+          `;
+        }
+
+        const clickHandler = isUnavailable 
+          ? '' 
+          : (isCustomizable 
+              ? `openCustomizeModal(${p.product_id})` 
+              : (inCartQty === 0 ? `quickAddDirectItem(${p.product_id})` : ''));
+
         return `
-          <div class="product-card ${isUnavailable ? 'is-unavailable' : ''}" onclick="${isUnavailable ? '' : `openCustomizeModal(${p.product_id})`}">
+          <div class="product-card ${isUnavailable ? 'is-unavailable' : ''} ${hasItemsClass}" ${clickHandler ? `onclick="${clickHandler}"` : ''}>
             <div>
               ${isUnavailable ? '<span class="badge bg-secondary mb-2">Unavailable</span>' : ''}
               <div class="product-title">${p.product_name}</div>
@@ -510,13 +623,7 @@
             </div>
             <div class="d-flex align-items-center justify-content-between mt-3">
               <div class="product-price">Php ${Number(p.price).toFixed(2)}</div>
-              ${!isUnavailable ? `
-                <div class="product-add-circle" title="Add item">
-                  <i class="bi bi-plus"></i>
-                </div>
-              ` : `
-                <span class="text-muted small"><i class="bi bi-slash-circle"></i></span>
-              `}
+              ${actionHtml}
             </div>
           </div>
         `;
@@ -524,14 +631,7 @@
     }
 
     function openCustomizeModal(productId) {
-      let found = null;
-      for (const s of menuData.sections) {
-        found = s.products.find(p => p.product_id === productId);
-        if (found) {
-          found.section_name = s.section_name;
-          break;
-        }
-      }
+      const found = findProduct(productId);
       if (!found) return;
 
       activeProduct = found;
@@ -544,9 +644,21 @@
       document.getElementById('modal-product-base-price').textContent = `Php ${Number(activeProduct.price).toFixed(2)}`;
       document.getElementById('modal-item-qty').textContent = '1';
 
-      const isPastil = activeProduct.section_name.toLowerCase().includes('pastil');
+      // Reset flavor and rice option pills UI to default first option
       const flavorWrapper = document.getElementById('flavor-group-wrapper');
       const riceWrapper = document.getElementById('rice-group-wrapper');
+      if (flavorWrapper) {
+        flavorWrapper.querySelectorAll('.option-pill').forEach((btn, i) => {
+          btn.classList.toggle('active', i === 0);
+        });
+      }
+      if (riceWrapper) {
+        riceWrapper.querySelectorAll('.option-pill').forEach((btn, i) => {
+          btn.classList.toggle('active', i === 0);
+        });
+      }
+
+      const isPastil = isCustomizableProduct(activeProduct);
       if (flavorWrapper) flavorWrapper.style.display = isPastil ? 'block' : 'none';
       if (riceWrapper) riceWrapper.style.display = isPastil ? 'block' : 'none';
 
@@ -579,7 +691,7 @@
 
     function updateModalTotal() {
       if (!activeProduct) return;
-      const isPastil = activeProduct.section_name.toLowerCase().includes('pastil');
+      const isPastil = isCustomizableProduct(activeProduct);
       let base = Number(activeProduct.price);
       if (isPastil) {
         base += modalRicePrice;
@@ -590,34 +702,43 @@
 
     function confirmAddToCart() {
       if (!activeProduct) return;
-      const isPastil = activeProduct.section_name.toLowerCase().includes('pastil');
+      const isPastil = isCustomizableProduct(activeProduct);
 
       let configuredAddons = [];
       if (isPastil) {
-        configuredAddons.unshift({ addon_id: null, addon_name: `Flavor: ${modalFlavor}`, addon_price: 0, quantity: 1 });
+        configuredAddons.push({ addon_id: null, addon_name: `Flavor: ${modalFlavor}`, addon_price: 0, quantity: 1 });
         if (modalRicePrice > 0) {
-          configuredAddons.unshift({ addon_id: null, addon_name: `Garlic Rice`, addon_price: modalRicePrice, quantity: 1 });
+          configuredAddons.push({ addon_id: null, addon_name: `Garlic Rice`, addon_price: modalRicePrice, quantity: 1 });
         } else {
-          configuredAddons.unshift({ addon_id: null, addon_name: `Plain Rice`, addon_price: 0, quantity: 1 });
+          configuredAddons.push({ addon_id: null, addon_name: `Plain Rice`, addon_price: 0, quantity: 1 });
         }
       }
 
-      let unitPrice = Number(activeProduct.price);
-      let subtotal = (unitPrice + configuredAddons.reduce((s, a) => s + (a.addon_price * a.quantity), 0)) * modalQty;
+      const unitPrice = Number(activeProduct.price);
+      const addonsUnitCost = configuredAddons.reduce((s, a) => s + (Number(a.addon_price) * (a.quantity || 1)), 0);
+      const singleItemCost = unitPrice + addonsUnitCost;
 
-      cart.push({
-        product_id: activeProduct.product_id,
-        item_name: activeProduct.product_name,
-        unit_price: unitPrice,
-        quantity: modalQty,
-        addons: configuredAddons,
-        subtotal: subtotal
-      });
+      // Check if EXACT SAME product + addons already exists in cart
+      const existingIdx = findCartItemIndex(activeProduct.product_id, configuredAddons);
+      if (existingIdx !== -1) {
+        cart[existingIdx].quantity += modalQty;
+        cart[existingIdx].subtotal = singleItemCost * cart[existingIdx].quantity;
+      } else {
+        cart.push({
+          product_id: activeProduct.product_id,
+          item_name: activeProduct.product_name,
+          unit_price: unitPrice,
+          quantity: modalQty,
+          addons: configuredAddons,
+          subtotal: singleItemCost * modalQty
+        });
+      }
 
       renderCart();
 
       const modalEl = document.getElementById('customizeProductModal');
-      bootstrap.Modal.getInstance(modalEl).hide();
+      const modalInstance = bootstrap.Modal.getInstance(modalEl);
+      if (modalInstance) modalInstance.hide();
     }
 
     function renderCart() {
@@ -635,6 +756,7 @@
         document.getElementById('cart-total-val').textContent = 'Php 0.00';
         btnCharge.disabled = true;
         btnSave.disabled = true;
+        renderProducts();
         return;
       }
 
@@ -666,6 +788,7 @@
 
       btnCharge.disabled = false;
       btnSave.disabled = false;
+      renderProducts();
     }
 
     function adjustCartItemQty(index, change) {

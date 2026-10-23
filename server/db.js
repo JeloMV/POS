@@ -12,12 +12,13 @@ sqlite.pragma('foreign_keys = ON');
 
 function query(sql, params = []) {
   const statement = sqlite.prepare(sql);
+  const sqliteParams = params.map(value => typeof value === 'boolean' ? (value ? 1 : 0) : value);
 
   if (/^\s*(SELECT|PRAGMA|WITH)\b/i.test(sql)) {
-    return Promise.resolve([statement.all(...params), undefined]);
+    return Promise.resolve([statement.all(...sqliteParams), undefined]);
   }
 
-  const result = statement.run(...params);
+  const result = statement.run(...sqliteParams);
   return Promise.resolve([{
     insertId: Number(result.lastInsertRowid),
     affectedRows: result.changes
